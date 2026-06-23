@@ -12,67 +12,79 @@
       background: #0a0a0a; color: #fff;
       display: flex; flex-direction: column; height: 100dvh;
     }
-    .header {
+   .header {
       padding: 16px 20px; border-bottom: 1px solid #222;
       display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
     }
-    .logo { font-size: 20px; font-weight: 700; }
-    .watermark { font-size: 12px; color: #666; font-weight: 500; }
-    .main-view {
+   .logo { font-size: 20px; font-weight: 700; }
+   .watermark { font-size: 12px; color: #666; font-weight: 500; }
+   .main-view {
       flex: 1; display: flex; flex-direction: column; overflow: hidden;
     }
-    .chat-container {
+   .chat-container {
       flex: 1; overflow-y: auto; padding: 20px;
       display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px;
     }
-    .preview-container {
-      display: none; flex: 1; flex-direction: column; background: #111;
+   .workspace {
+      display: none; flex: 1; overflow: hidden;
     }
-    .preview-container.active { display: flex; }
-    .tabs {
+   .workspace.active { display: flex; }
+   .sidebar {
+      width: 200px; background: #111; border-right: 1px solid #222;
+      overflow-y: auto; flex-shrink: 0;
+    }
+   .file {
+      padding: 8px 16px; cursor: pointer; font-size: 13px;
+      border-bottom: 1px solid #1a1a1a; color: #999;
+    }
+   .file:hover { background: #1a1a1a; }
+   .file.active { background: #2563eb; color: #fff; }
+   .editor-area {
+      flex: 1; display: flex; flex-direction: column;
+    }
+   .tabs {
       display: flex; border-bottom: 1px solid #222; background: #0a0a0a;
     }
-    .tab {
+   .tab {
       padding: 12px 20px; cursor: pointer; border: none; background: none;
       color: #666; font-size: 14px; font-weight: 600;
     }
-    .tab.active { color: #fff; border-bottom: 2px solid #2563eb; }
-    .preview-frame {
-      flex: 1; border: none; background: #fff;
+   .tab.active { color: #fff; border-bottom: 2px solid #2563eb; }
+   .preview-frame {
+      flex: 1; border: none; background: #fff; display: none;
     }
-    .code-view {
+   .preview-frame.active { display: block; }
+   .code-view {
       flex: 1; background: #0a0a0a; color: #e5e5e5;
       padding: 16px; overflow: auto; font-family: 'Courier New', monospace;
       font-size: 13px; white-space: pre-wrap; display: none;
     }
-    .code-view.active { display: block; }
-    .message {
+   .code-view.active { display: block; }
+   .message {
       padding: 12px 16px; border-radius: 12px; max-width: 80%;
       line-height: 1.5; word-wrap: break-word;
     }
-    .user-message { background: #2563eb; align-self: flex-end; }
-    .ai-message { background: #1a1a1a; border: 1px solid #2a2a2a; align-self: flex-start; }
-    .welcome {
-      text-align: center; margin: auto; max-width: 600px;
-    }
-    .welcome-subtitle { color: #999; font-size: 14px; margin-bottom: 16px; }
-    .welcome h1 {
+   .user-message { background: #2563eb; align-self: flex-end; }
+   .ai-message { background: #1a1a1a; border: 1px solid #2a2a2a; align-self: flex-start; }
+   .welcome { text-align: center; margin: auto; max-width: 600px; }
+   .welcome-subtitle { color: #999; font-size: 14px; margin-bottom: 16px; }
+   .welcome h1 {
       font-size: 34px; margin-bottom: 12px;
       background: linear-gradient(135deg, #fff 0%, #999 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2;
     }
-    .welcome p { color: #999; margin-bottom: 24px; font-size: 16px; }
-    .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-    .chip {
+   .welcome p { color: #999; margin-bottom: 24px; font-size: 16px; }
+   .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+   .chip {
       background: #1a1a1a; border: 1px solid #2a2a2a; padding: 8px 16px;
       border-radius: 20px; font-size: 14px; cursor: pointer; transition: all 0.2s;
     }
-    .chip:active { background: #222; transform: scale(0.98); }
-    .input-container {
+   .chip:active { background: #222; transform: scale(0.98); }
+   .input-container {
       padding: 16px 20px; border-top: 1px solid #222; background: #0a0a0a;
       flex-shrink: 0; position: fixed; bottom: 0; left: 0; right: 0;
     }
-    .input-wrapper {
+   .input-wrapper {
       display: flex; gap: 12px; background: #1a1a1a; border: 1px solid #2a2a2a;
       border-radius: 24px; padding: 12px 16px; align-items: flex-end;
     }
@@ -81,20 +93,20 @@
       resize: none; outline: none; max-height: 120px; font-family: inherit; line-height: 1.4;
     }
     textarea::placeholder { color: #666; }
-    .send-btn {
+   .send-btn {
       background: #2563eb; border: none; width: 36px; height: 36px; border-radius: 50%;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; opacity: 1; transition: background 0.2s;
     }
-    .send-btn:active:not(:disabled) { background: #1d4ed8; transform: scale(0.95); }
-    .send-btn:disabled { background: #333; cursor: not-allowed; opacity: 0.5; }
-    .send-btn svg { width: 18px; height: 18px; fill: white; }
-    .loading {
+   .send-btn:active:not(:disabled) { background: #1d4ed8; transform: scale(0.95); }
+   .send-btn:disabled { background: #333; cursor: not-allowed; opacity: 0.5; }
+   .send-btn svg { width: 18px; height: 18px; fill: white; }
+   .loading {
       display: inline-block; width: 14px; height: 14px; border: 2px solid #666;
       border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .new-chat-btn {
+   .new-chat-btn {
       background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff;
       padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
     }
@@ -114,22 +126,25 @@
       <div class="welcome" id="welcome">
         <div class="welcome-subtitle">Turn your idea into a real app in seconds</div>
         <h1>What will you build today?</h1>
-        <p>Type any app idea. Forge builds it live.</p>
+        <p>Forge creates multi-file apps. Preview them live.</p>
         <div class="chips">
-          <div class="chip" onclick="setPrompt('Todo app with dark mode')">Todo app</div>
-          <div class="chip" onclick="setPrompt('Calculator with history')">Calculator</div>
-          <div class="chip" onclick="setPrompt('Snake game with score')">Snake game</div>
+          <div class="chip" onclick="setPrompt('Todo app with separate HTML, CSS, JS files')">Todo app</div>
+          <div class="chip" onclick="setPrompt('Landing page with style.css and script.js')">Landing page</div>
+          <div class="chip" onclick="setPrompt('Dashboard with charts using multiple files')">Dashboard</div>
         </div>
       </div>
     </div>
 
-    <div class="preview-container" id="previewContainer">
-      <div class="tabs">
-        <button class="tab active" onclick="showTab('preview')">Preview</button>
-        <button class="tab" onclick="showTab('code')">Code</button>
+    <div class="workspace" id="workspace">
+      <div class="sidebar" id="fileTree"></div>
+      <div class="editor-area">
+        <div class="tabs">
+          <button class="tab active" onclick="showTab('preview')">Preview</button>
+          <button class="tab" onclick="showTab('code')">Code</button>
+        </div>
+        <iframe class="preview-frame active" id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div class="code-view" id="codeView"></div>
       </div>
-      <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
-      <div class="code-view" id="codeView"></div>
     </div>
   </div>
 
@@ -150,7 +165,8 @@
 
   <script>
     let isLoading = false;
-    let currentCode = '';
+    let projectFiles = [];
+    let activeFile = '';
 
     function autoResize(textarea) {
       textarea.style.height = 'auto';
@@ -158,7 +174,7 @@
     }
 
     function handleKeydown(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' &&!e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
@@ -170,35 +186,67 @@
     }
 
     function newChat() {
-      document.getElementById('previewContainer').classList.remove('active');
+      document.getElementById('workspace').classList.remove('active');
       document.getElementById('chatContainer').style.display = 'flex';
       document.getElementById('newChatBtn').style.display = 'none';
       document.getElementById('chatContainer').innerHTML = `
         <div class="welcome" id="welcome">
           <div class="welcome-subtitle">Turn your idea into a real app in seconds</div>
           <h1>What will you build today?</h1>
-          <p>Type any app idea. Forge builds it live.</p>
+          <p>Forge creates multi-file apps. Preview them live.</p>
           <div class="chips">
-            <div class="chip" onclick="setPrompt('Todo app with dark mode')">Todo app</div>
-            <div class="chip" onclick="setPrompt('Calculator with history')">Calculator</div>
-            <div class="chip" onclick="setPrompt('Snake game with score')">Snake game</div>
+            <div class="chip" onclick="setPrompt('Todo app with separate HTML, CSS, JS files')">Todo app</div>
+            <div class="chip" onclick="setPrompt('Landing page with style.css and script.js')">Landing page</div>
+            <div class="chip" onclick="setPrompt('Dashboard with charts using multiple files')">Dashboard</div>
           </div>
         </div>
       `;
-      currentCode = '';
+      projectFiles = [];
+      activeFile = '';
     }
 
     function showTab(tab) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelector(`.tab:nth-child(${tab === 'preview' ? 1 : 2})`).classList.add('active');
+      document.querySelector(`.tab:nth-child(${tab === 'preview'? 1 : 2})`).classList.add('active');
 
       if (tab === 'preview') {
-        document.getElementById('previewFrame').style.display = 'block';
+        document.getElementById('previewFrame').classList.add('active');
         document.getElementById('codeView').classList.remove('active');
+        renderPreview();
       } else {
-        document.getElementById('previewFrame').style.display = 'none';
+        document.getElementById('previewFrame').classList.remove('active');
         document.getElementById('codeView').classList.add('active');
+        showFile(activeFile);
       }
+    }
+
+    function showFile(path) {
+      activeFile = path;
+      document.querySelectorAll('.file').forEach(f => f.classList.remove('active'));
+      document.querySelector(`[data-path="${path}"]`)?.classList.add('active');
+      const file = projectFiles.find(f => f.path === path);
+      document.getElementById('codeView').textContent = file? file.content : '';
+    }
+
+    function renderPreview() {
+      const htmlFile = projectFiles.find(f => f.path.endsWith('.html'));
+      if (!htmlFile) return;
+
+      let html = htmlFile.content;
+      const cssFiles = projectFiles.filter(f => f.path.endsWith('.css'));
+      const jsFiles = projectFiles.filter(f => f.path.endsWith('.js'));
+
+      // Inject CSS
+      cssFiles.forEach(css => {
+        html = html.replace('</head>', `<style>${css.content}</style></head>`);
+      });
+
+      // Inject JS
+      jsFiles.forEach(js => {
+        html = html.replace('</body>', `<script>${js.content}</script></body>`);
+      });
+
+      document.getElementById('previewFrame').srcdoc = html;
     }
 
     async function sendMessage() {
@@ -209,7 +257,6 @@
       if (!prompt) return;
 
       document.getElementById('welcome')?.remove();
-
       addMessage(prompt, 'user');
       input.value = '';
       input.style.height = 'auto';
@@ -219,7 +266,7 @@
       sendBtn.disabled = true;
       sendBtn.innerHTML = '<div class="loading"></div>';
 
-      addMessage('Forging your app...', 'ai', true);
+      addMessage('Forging your files...', 'ai', true);
 
       try {
         const res = await fetch('/api/generate', {
@@ -234,9 +281,8 @@
         if (!res.ok) {
           addMessage(`Error: ${data.error}`, 'ai');
         } else {
-          // KEY FIX: Don't addMessage with code. Go straight to preview.
-          currentCode = data.result;
-          showPreview(currentCode);
+          projectFiles = data.files;
+          showWorkspace();
         }
       } catch (error) {
         document.querySelector('.ai-message.loading')?.remove();
@@ -248,22 +294,31 @@
       sendBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
     }
 
-    function showPreview(htmlCode) {
+    function showWorkspace() {
       document.getElementById('chatContainer').style.display = 'none';
-      document.getElementById('previewContainer').classList.add('active');
+      document.getElementById('workspace').classList.add('active');
       document.getElementById('newChatBtn').style.display = 'inline-block';
 
-      const frame = document.getElementById('previewFrame');
-      frame.srcdoc = htmlCode;
+      const tree = document.getElementById('fileTree');
+      tree.innerHTML = '';
+      projectFiles.forEach(file => {
+        const div = document.createElement('div');
+        div.className = 'file';
+        div.textContent = file.path;
+        div.setAttribute('data-path', file.path);
+        div.onclick = () => showFile(file.path);
+        tree.appendChild(div);
+      });
 
-      document.getElementById('codeView').textContent = htmlCode;
+      const firstHtml = projectFiles.find(f => f.path.endsWith('.html'))?.path;
+      if (firstHtml) showFile(firstHtml);
       showTab('preview');
     }
 
     function addMessage(text, type, loading = false) {
       const container = document.getElementById('chatContainer');
       const msg = document.createElement('div');
-      msg.className = `message ${type}-message${loading ? ' loading' : ''}`;
+      msg.className = `message ${type}-message${loading? ' loading' : ''}`;
       msg.textContent = text;
       container.appendChild(msg);
       setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);

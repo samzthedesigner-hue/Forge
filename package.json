@@ -1,0 +1,13 @@
+{
+  "name": "forge",
+  "version": "1.0.0",
+  "description": "Build apps from text with AI",
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Deploy to Vercel - no local dev needed'",
+    "build": "echo 'Static site - no build step'"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.28.4"
+  }
+}

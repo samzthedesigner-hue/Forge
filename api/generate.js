@@ -15,8 +15,8 @@ export default async function handler(req, res) {
   try {
     const { prompt } = req.body
     
-    if (!process.env.key) {
-      return res.status(500).json({ error: 'GROQ_KEY missing. Add env var named "key" in Vercel Settings' })
+    if (!process.env.GROQ_KEY) {
+      return res.status(500).json({ error: 'GROQ_KEY missing in Vercel Environment Variables' })
     }
 
     if (!prompt) {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.key}`,
+        'Authorization': `Bearer ${process.env.GROQ_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -34,15 +34,15 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: 'You are Forge. Describe the app you would build for this prompt in 2-3 sentences. Be concise. No code, no markdown.'
+            content: 'You are Forge, an AI that instantly describes apps. For the user prompt, respond in 2-3 punchy sentences explaining what the app would do, key features, and tech stack. Be exciting and specific. No code blocks.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 300
+        temperature: 0.8,
+        max_tokens: 400
       })
     })
 

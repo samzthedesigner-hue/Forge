@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forge - AI Code Generator</title>
+  <title>Forge - Build Apps with AI</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -61,12 +61,17 @@
       margin-bottom: 16px;
     }
     .welcome h1 {
-      font-size: 32px;
+      font-size: 34px;
       margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff 0%, #999 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
     }
     .welcome p {
       color: #999;
       margin-bottom: 24px;
+      font-size: 16px;
     }
     .chips {
       display: flex;
@@ -81,8 +86,12 @@
       border-radius: 20px;
       font-size: 14px;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    .chip:hover { background: #222; }
+    .chip:hover { 
+      background: #222; 
+      border-color: #333;
+    }
     .input-container {
       padding: 16px 20px;
       border-top: 1px solid #222;
@@ -120,6 +129,10 @@
       justify-content: center;
       flex-shrink: 0;
       opacity: 1;
+      transition: background 0.2s;
+    }
+    .send-btn:hover:not(:disabled) {
+      background: #1d4ed8;
     }
     .send-btn:disabled {
       background: #333;
@@ -147,13 +160,13 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="welcome" id="welcome">
-      <div class="welcome-subtitle">Build apps and websites by chatting with AI</div>
-      <h1>What can I help you ship?</h1>
-      <p>Describe any app or site. I'll generate it instantly.</p>
+      <div class="welcome-subtitle">Turn your idea into a real app in seconds</div>
+      <h1>What will you build today?</h1>
+      <p>Type any app idea. Watch Forge design it live.</p>
       <div class="chips">
-        <div class="chip" onclick="setPrompt('Todo app with React')">Todo app</div>
-        <div class="chip" onclick="setPrompt('Landing page for a SaaS')">SaaS landing</div>
-        <div class="chip" onclick="setPrompt('Portfolio website')">Portfolio</div>
+        <div class="chip" onclick="setPrompt('AI habit tracker with streaks')">Habit tracker</div>
+        <div class="chip" onclick="setPrompt('E-commerce store for sneakers')">Online store</div>
+        <div class="chip" onclick="setPrompt('ChatGPT clone with voice input')">AI chatbot</div>
       </div>
     </div>
   </div>
@@ -162,7 +175,7 @@
     <div class="input-wrapper">
       <textarea 
         id="promptInput" 
-        placeholder="Ask Forge to build..." 
+        placeholder="Describe your app idea..." 
         rows="1"
         onkeydown="handleKeydown(event)"
         oninput="autoResize(this)"
@@ -212,7 +225,7 @@
       sendBtn.disabled = true;
       sendBtn.innerHTML = '<div class="loading"></div>';
 
-      addMessage('Thinking...', 'ai', true);
+      addMessage('Forging your app...', 'ai', true);
 
       try {
         const res = await fetch('/api/generate', {

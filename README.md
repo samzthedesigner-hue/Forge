@@ -1,38 +1,54 @@
-# Forge
+ Forge
 
-**Build Apps, Games & AI from Text. 0MB Install. 100% Offline After First Load.**
+Turn a sentence into a working app. No setup, no code.
 
-Forge is a polyglot code agent that runs in your browser. Describe what you want → it generates the full project → runs it live.
+![Forge](icon-512.png)
 
-### **Supports**
-React, Vue, Svelte, Next.js, Node, Python, Flask, FastAPI, Rust + Bevy, Go WASM, Unity WebGL, PWAs, Static Sites
+Try it live: [your-vercel-url.vercel.app]
 
-### **Features**
-1. **LLM-Powered**: OpenAI, Claude, Gemini, Groq, Ollama
-2. **Live Preview**: WebContainer boots real Node.js in-browser
-3. **Offline First**: Service worker caches everything. Works on a plane.
-4. **No Build Step**: Type prompt → get files → hit Run
-5. **Export**: Download as.zip or push to GitHub
+ What is Forge?
 
-### **How to Use**
-1. Click ⚙️ → Add your API key for OpenAI/Claude/Gemini/Groq
-2. Select language or use Auto-detect
-3. Type: `Build a Rust Bevy game where a blue cube moves with WASD`
-4. Hit Generate → Watch files stream in
-5. Hit Run → Live preview opens
+Forge is your AI dev in a browser tab. Describe an app and watch it get built file by file. Edit it, run it, download it. 
 
-### **Deploy Your Own**
-1. Fork this repo
-2. Settings → Pages → Deploy from `main` / `root`
-3. Done. `https://yourname.github.io/forge`
+Type `React todo app with dark mode` → Get a full project with `package.json`, `vite.config.js`, components, and styling. Runs instantly.
 
-### **Local Dev**
-Just open `index.html`. No npm install needed.
+ How to use it
 
-### **Roadmap**
-- [ ] Zip export
-- [ ] GitHub push
-- [ ] Unity build pipeline
-- [ ] Mobile APK via Capacitor
+1. Describe your app  
+   Example: `Next.js blog with markdown posts and Tailwind`
 
-MIT License
+2. Watch it build  
+   Forge shows a live plan and streams each file. Expand any step to see the code. Ask questions mid-build: `Why Next.js? Can you use app router?`
+
+3. Run it  
+   Hit ▶ Run to preview right in the browser. No installs.
+
+4. Keep it  
+   ↓ Zip to download everything. ↑ GitHub to push to a repo. **Install App to add Forge to your phone like a native app.
+
+ What can it build?
+
+- Web apps: React, Next.js, Vue, Svelte, Vanilla JS
+- Backends: Flask, FastAPI, Express
+- Scripts: Python data tools, CLIs
+- Games: Canvas games, Three.js
+- Static sites: Landing pages, portfolios
+
+If you can describe it, Forge will try to build it.
+
+ Tips for better results
+
+1. Be specific: `React todo app with drag-and-drop, dark mode, and localStorage` beats `todo app`
+2. Mention stack: Say `Next.js` or `Vue` if you have a preference
+3. Ask mid-build: Click Ask Forge if you want auth added or a lib swapped
+4. **Edit after**: Forge writes code, but you own it. Tweak anything in the editor
+
+Free vs Your Own Key
+
+- Free: 25 apps per month. No sign up.
+- Unlimited: Add your own Groq API key in Settings. Free keys at console.groq.com/keys
+
+Examples
+
+Try these prompts:
+

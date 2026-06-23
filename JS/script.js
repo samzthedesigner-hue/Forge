@@ -5,6 +5,8 @@ const buildBar = document.getElementById('buildBar')
 const buildToggle = document.getElementById('buildToggle')
 const buildStatusText = document.getElementById('buildStatusText')
 const fileList = document.getElementById('fileList')
+const welcomeScreen = document.getElementById('welcomeScreen')
+const exampleChips = document.querySelectorAll('.example-chip')
 
 // Auto-resize textarea
 promptInput.addEventListener('input', () => {
@@ -15,6 +17,19 @@ promptInput.addEventListener('input', () => {
 // Collapsible build bar
 buildToggle.addEventListener('click', () => {
   buildBar.classList.toggle('collapsed')
+})
+
+// Hide welcome when first message sent
+function hideWelcome() {
+  if (welcomeScreen) welcomeScreen.style.display = 'none'
+}
+
+// Example chips fill input
+exampleChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    promptInput.value = chip.textContent
+    promptInput.focus()
+  })
 })
 
 sendBtn.addEventListener('click', handleSend)
@@ -31,6 +46,7 @@ async function handleSend() {
 
   // Add user message
   addMessage(prompt, 'user')
+  hideWelcome()
   promptInput.value = ''
   promptInput.style.height = 'auto'
 
@@ -86,7 +102,7 @@ function hideBuildBar() {
 }
 
 async function simulateBuild(result) {
-  // Fake file list - you'll replace this with real file data from your API
+  // Fake file list - replace with real file data from your API later
   const files = ['index.html', 'style.css', 'script.js', 'package.json']
 
   for (let i = 0; i < files.length; i++) {
@@ -122,10 +138,10 @@ function typeWriter(text) {
         clearInterval(interval)
         resolve()
       }
-    }, 15) // Speed of typing
+    }, 15)
   })
 }
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
-}
+  }

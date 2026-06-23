@@ -8,13 +8,13 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  if (req.method !== 'POST') {
+  if (req.method!== 'POST') {
     return res.status(405).json({ error: 'Use POST method' })
   }
 
   try {
     const { prompt } = req.body
-    
+
     if (!process.env.GROQ_KEY) {
       return res.status(500).json({ error: 'GROQ_KEY missing in Vercel Environment Variables' })
     }
@@ -34,15 +34,15 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: 'You are Forge, an AI that instantly describes apps. For the user prompt, respond in 2-3 punchy sentences explaining what the app would do, key features, and tech stack. Be exciting and specific. No code blocks.'
+            content: `You are Forge, an AI code generator. You MUST respond with ONLY a single, complete, working HTML file. No explanations, no markdown, no code blocks. The HTML file must include all CSS in <style> tags and all JS in <script> tags. The app must be fully functional and run immediately when opened. Use modern, clean design. Mobile-first.`
           },
           {
             role: 'user',
-            content: prompt
+            content: `Build this app: ${prompt}`
           }
         ],
-        temperature: 0.8,
-        max_tokens: 400
+        temperature: 0.2,
+        max_tokens: 8000
       })
     })
 
@@ -52,7 +52,14 @@ export default async function handler(req, res) {
     }
 
     const data = await groqRes.json()
-    const result = data.choices[0].message.content
+    let result = data.choices[0].message.content.trim()
+
+    // Strip markdown if Groq adds it anyway
+    if (result.startsWith('```html')) {
+      result = result.replace(/```html\n?/, '').replace(/```$/, '');
+    } else if (result.startsWith('```')) {
+      result = result.replace(/```\n?/, '').replace(/```$/, '');
+    }
 
     return res.status(200).json({ result })
 

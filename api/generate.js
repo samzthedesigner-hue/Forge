@@ -13,15 +13,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const key = `ratelimit_${ip}`
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown'
+  const ratelimitKey = `ratelimit_${ip}`
 
-  const current = await redis.incr(key)
-  if (current === 1) {
-    await redis.expire(key, 60) // 1 min window
-  }
-  if (current > 5) { // 5 requests per minute
-    return res.status(429).json({ error: 'Too many requests. Try again in a minute.' })
+  try {
+    const current = await redis.incr(ratelimitKey)
+    if (current === 1) {
+      await redis.expire(ratelimitKey, 60) // 1 minute window
+    }
+    if (current > 5) { // 5 requests per minute
+      return res.status(429).json({ error: 'Too many requests. Try again in a minute.' })
+    }
+  } catch (err) {
+    console.error('Redis error:', err)
+    // Don't block requests if Redis fails - just log it
   }
 
   const { prompt } = req.body
@@ -36,6 +41,7 @@ export default async function handler(req, res) {
     })
     res.status(200).json({ result: chatCompletion.choices[0].message.content })
   } catch (error) {
+    console.error('Groq error:', error)
     res.status(500).json({ error: error.message })
   }
 }

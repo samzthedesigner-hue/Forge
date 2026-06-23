@@ -228,14 +228,12 @@
       document.getElementById('codeView').textContent = file? file.content : '';
     }
 
+    function escapeScriptTags(str) {
+      return str.replace(/<\/script>/gi, '<\\/script>');
+    }
+
     function renderPreview() {
       const htmlFile = projectFiles.find(f => f.path.endsWith('.html') || f.path === 'index.html');
-      const hasBackend = projectFiles.some(f =>
-        f.path.endsWith('.py') ||
-        f.path.includes('server.js') ||
-        f.path === 'package.json' ||
-        f.path === 'requirements.txt'
-      );
 
       if (!htmlFile) {
         const runCmd = projectFiles.find(f => f.path === 'requirements.txt')? 'pip install -r requirements.txt && python app.py' :
@@ -259,18 +257,20 @@
       const jsFiles = projectFiles.filter(f => f.path.endsWith('.js') &&!f.path.includes('server') &&!f.path.includes('express'));
 
       cssFiles.forEach(css => {
+        const styleTag = `<style>${escapeScriptTags(css.content)}</style>`;
         if (html.includes('</head>')) {
-          html = html.replace('</head>', `<style>${css.content}</style></head>`);
+          html = html.replace('</head>', styleTag + '</head>');
         } else {
-          html = `<style>${css.content}</style>` + html;
+          html = styleTag + html;
         }
       });
 
       jsFiles.forEach(js => {
+        const scriptTag = `<script>${escapeScriptTags(js.content)}<\/script>`;
         if (html.includes('</body>')) {
-          html = html.replace('</body>', `<script>${js.content}</script></body>`);
+          html = html.replace('</body>', scriptTag + '</body>');
         } else {
-          html = html + `<script>${js.content}</script>`;
+          html = html + scriptTag;
         }
       });
 

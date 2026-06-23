@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forge - Build Apps from Text</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#58a6ff">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Forge <span id="lang-badge"></span></h1>
+      <div>
+        <span id="status">Free Tier</span>
+        <button id="settingsBtn">⚙️</button>
+      </div>
+    </header>
+    <div id="main">
+      <div id="sidebar">
+        <div id="prompt-box">
+          <select id="langSelect">
+            <option value="auto">Auto-detect</option>
+            <option value="react">React</option>
+            <option value="nextjs">Next.js</option>
+            <option value="vue">Vue</option>
+            <option value="python">Python</option>
+            <option value="flask">Flask</option>
+            <option value="static">HTML/CSS/JS</option>
+          </select>
+          <textarea id="promptInput" placeholder="Build a React todo app with dark mode..."></textarea>
+          <button id="generateBtn">Generate</button>
+          <button id="runBtn" disabled>▶ Run</button>
+          <button id="buildBtn" disabled>📦 Build</button>
+          <button id="zipBtn" disabled>↓ Zip</button>
+          <button id="pushBtn" disabled>↑ GitHub</button>
+          <button id="installBtn" style="display:none;background:#000;color:#fff;border:1px solid var(--border)">Install App</button>
+          <button onclick="window.open('https://buy.stripe.com/test_00g00g')" style="background:#635bff;color:#fff;border:none;padding:8px;border-radius:6px;width:100%;margin-top:8px">🚀 Forge Pro $5/mo</button>
+        </div>
+        <div id="file-tree">
+          <div class="tree-header">Files</div>
+          <div id="fileList"></div>
+        </div>
+      </div>
+      <div id="workspace">
+        <div id="tabs"></div>
+        <div id="editor-panel"><div id="editor"></div></div>
+        <div id="preview-panel" class="hidden">
+          <div class="panel-header"><span>Preview</span><button id="closePreview">✕</button></div>
+          <iframe id="preview" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        </div>
+        <div id="terminal-panel" class="hidden">
+          <div class="panel-header"><span>Terminal</span><button id="closeTerminal">✕</button></div>
+          <pre id="terminal"></pre>
+        </div>
+        <div id="progress-panel" class="hidden">
+          <div id="progress-text">Initializing...</div>
+          <div id="progress-bar"><div id="progress-fill"></div></div>
+          <div id="progress-log"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="settings-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Forge Account</h3>
+      <div id="freeStatus" style="padding:12px;background:var(--bg);border-radius:6px;margin-bottom:16px">
+        <b>Free Tier</b><br>
+        <span id="freeCount">50 generations left this month</span>
+      </div>
+      <label>Forge Pro Key</label>
+      <input id="proKeyInput" type="password" placeholder="Paste key from email after purchase">
+      <div style="font-size:12px;color:#8b949e;margin:4px 0 12px">No key? <a href="https://buy.stripe.com/test_00g00g" target="_blank" style="color:var(--accent)">Upgrade to Pro $5/mo</a> for unlimited.</div>
+      <label>Model</label>
+      <select id="modelInput" disabled><option>llama-3.1-70b-versatile</option></select>
+      <div class="modal-actions">
+        <button id="saveSettings">Save</button>
+        <button id="closeSettings">Close</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); deferredPrompt = e;
+      document.getElementById('installBtn').style.display = 'block';
+    });
+    document.getElementById('installBtn').onclick = () => deferredPrompt.prompt();
+  </script>
+</body>
+</html>

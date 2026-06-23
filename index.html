@@ -14,7 +14,8 @@
     <header>
       <h1>Forge <span id="lang-badge"></span></h1>
       <div>
-        <span id="status">Free Tier</span>
+        <span id="status">Free: 25 left</span>
+        <button id="projectsBtn">📁</button>
         <button id="settingsBtn">⚙️</button>
       </div>
     </header>
@@ -32,12 +33,12 @@
           </select>
           <textarea id="promptInput" placeholder="Build a React todo app with dark mode..."></textarea>
           <button id="generateBtn">Generate</button>
+          <button id="askBtn" disabled>Ask Forge</button>
           <button id="runBtn" disabled>▶ Run</button>
           <button id="buildBtn" disabled>📦 Build</button>
           <button id="zipBtn" disabled>↓ Zip</button>
           <button id="pushBtn" disabled>↑ GitHub</button>
-          <button id="installBtn" style="display:none;background:#000;color:#fff;border:1px solid var(--border)">Install App</button>
-          <button onclick="window.open('https://buy.stripe.com/test_00g00g')" style="background:#635bff;color:#fff;border:none;padding:8px;border-radius:6px;width:100%;margin-top:8px">🚀 Forge Pro $5/mo</button>
+          <button id="installBtn" style="display:none">Install App</button>
         </div>
         <div id="file-tree">
           <div class="tree-header">Files</div>
@@ -55,32 +56,72 @@
           <div class="panel-header"><span>Terminal</span><button id="closeTerminal">✕</button></div>
           <pre id="terminal"></pre>
         </div>
-        <div id="progress-panel" class="hidden">
-          <div id="progress-text">Initializing...</div>
-          <div id="progress-bar"><div id="progress-fill"></div></div>
-          <div id="progress-log"></div>
+
+        <div id="build-log" class="hidden">
+          <div class="log-header">
+            <span id="build-status-text">Forge is building...</span>
+            <button id="scrollToLatest" class="latest-btn hidden">↓ Latest</button>
+          </div>
+          <div id="log-stream"></div>
+          <div class="forge-animation">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
         </div>
+
       </div>
     </div>
   </div>
+
+  <div id="projects-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Your Projects</h3>
+      <div id="projectsList"></div>
+      <div class="modal-actions">
+        <button id="closeProjects">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ask-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Ask Forge</h3>
+      <textarea id="askInput" placeholder="Why did you choose Vite? Can you add auth?" style="height:80px"></textarea>
+      <div id="askResponse" style="margin-top:12px;font-size:13px;max-height:200px;overflow:auto"></div>
+      <div class="modal-actions">
+        <button id="sendAsk">Ask</button>
+        <button id="closeAsk">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div id="settings-modal" class="hidden">
     <div class="modal-content">
       <h3>Forge Account</h3>
-      <div id="freeStatus" style="padding:12px;background:var(--bg);border-radius:6px;margin-bottom:16px">
+      <div id="freeStatus">
         <b>Free Tier</b><br>
-        <span id="freeCount">50 generations left this month</span>
+        <span id="freeCount">25 generations left this month</span>
       </div>
-      <label>Forge Pro Key</label>
-      <input id="proKeyInput" type="password" placeholder="Paste key from email after purchase">
-      <div style="font-size:12px;color:#8b949e;margin:4px 0 12px">No key? <a href="https://buy.stripe.com/test_00g00g" target="_blank" style="color:var(--accent)">Upgrade to Pro $5/mo</a> for unlimited.</div>
-      <label>Model</label>
-      <select id="modelInput" disabled><option>llama-3.1-70b-versatile</option></select>
+      <label>Your Groq API Key - BYOK</label>
+      <input id="userKeyInput" type="password" placeholder="gsk_... - Optional">
+      <div style="font-size:12px;color:#8b949e;margin:4px 0 12px">No key? <a href="https://console.groq.com/keys" target="_blank">Get free Groq key</a> for unlimited, or <a href="https://buy.stripe.com/test_00g00g" target="_blank">Upgrade to Pro $5/mo</a></div>
       <div class="modal-actions">
         <button id="saveSettings">Save</button>
         <button id="closeSettings">Close</button>
       </div>
     </div>
   </div>
+
+  <div id="upsell-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Free Limit Reached</h3>
+      <p>You've used all 25 free generations this month.</p>
+      <button onclick="window.open('https://buy.stripe.com/test_00g00g')" style="width:100%;background:#635bff;color:#fff;padding:12px;border:none;border-radius:6px;margin:8px 0">🚀 Upgrade to Pro $5/mo</button>
+      <p style="font-size:12px;text-align:center">or</p>
+      <button id="useBYOK" style="width:100%;background:var(--border);color:var(--text);padding:12px;border:none;border-radius:6px">Use Your Own Groq Key</button>
+      <button id="closeUpsell" style="width:100%;background:none;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;margin-top:8px">Cancel</button>
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

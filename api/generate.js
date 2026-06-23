@@ -34,15 +34,16 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `You are Forge, an AI code generator. You MUST respond with ONLY a single, complete, working HTML file. No explanations, no markdown, no code blocks. The HTML file must include all CSS in <style> tags and all JS in <script> tags. The app must be fully functional and run immediately when opened. Use modern, clean design. Mobile-first.`
+            content: `You are Forge, an AI code generator. Respond with ONLY valid JSON. No markdown, no explanations. Format: {"files": [{"path": "index.html", "content": "<!DOCTYPE..."}, {"path": "style.css", "content": "body {...}"}, {"path": "app.js", "content": "const..."}]}. Create all files needed for a working app. Use modern code.`
           },
           {
             role: 'user',
-            content: `Build this app: ${prompt}`
+            content: `Build this app with separate HTML, CSS, and JS files: ${prompt}`
           }
         ],
         temperature: 0.2,
-        max_tokens: 8000
+        max_tokens: 8000,
+        response_format: { type: "json_object" }
       })
     })
 
@@ -52,16 +53,9 @@ export default async function handler(req, res) {
     }
 
     const data = await groqRes.json()
-    let result = data.choices[0].message.content.trim()
+    const result = JSON.parse(data.choices[0].message.content)
 
-    // Strip markdown if Groq adds it anyway
-    if (result.startsWith('```html')) {
-      result = result.replace(/```html\n?/, '').replace(/```$/, '');
-    } else if (result.startsWith('```')) {
-      result = result.replace(/```\n?/, '').replace(/```$/, '');
-    }
-
-    return res.status(200).json({ result })
+    return res.status(200).json(result)
 
   } catch (error) {
     return res.status(500).json({ error: `Server crashed: ${error.message}` })

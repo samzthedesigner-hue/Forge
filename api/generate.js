@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  if (req.method!== 'POST') {
+  if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Use POST method' })
   }
 
@@ -34,11 +34,11 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `You are Forge, an AI code generator. Respond with ONLY valid JSON. No markdown, no explanations. Format: {"files": [{"path": "index.html", "content": "<!DOCTYPE..."}, {"path": "style.css", "content": "body {...}"}, {"path": "app.js", "content": "const..."}]}. Create all files needed for a working app. Use modern code.`
+            content: `You are Forge, an AI full-stack code generator. Respond with ONLY valid JSON. No markdown, no explanations. Format: {"files": [{"path": "frontend/index.html", "content": "..."}, {"path": "backend/app.py", "content": "..."}, {"path": "requirements.txt", "content": "flask"}]}. If the user asks for backend, create Python/Node files. If frontend only, just make HTML/CSS/JS. Always include all files needed to run. Use modern best practices. For frontend-only, use "index.html", "style.css", "app.js".`
           },
           {
             role: 'user',
-            content: `Build this app with separate HTML, CSS, and JS files: ${prompt}`
+            content: prompt
           }
         ],
         temperature: 0.2,

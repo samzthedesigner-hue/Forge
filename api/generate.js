@@ -9,13 +9,19 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const proEmail = req.headers['x-user-email'];
 
   if (req.method === 'OPTIONS') {
     const hasBYOK = req.headers['x-groq-key'] || req.headers['x-openai-key'] || req.headers['x-openrouter-key'];
-    const proEmail = req.headers['x-user-email'];
-    const isPro = proEmail && await redis.get(`pro_email:${proEmail}`);
-
-    if (hasBYOK || isPro) return res.status(200).end();
+    const tier = proEmail && await redis.get(`tier_email:${proEmail}`);
+    
+    if (hasBYOK || tier === 'PROMAX') return res.status(200).end();
+    
+    if (tier === 'PRO') {
+      const credits = await redis.get(`credits_email:${proEmail}`) || 0;
+      res.setHeader('X-Credits-Remaining', credits.toString());
+      return res.status(200).end();
+    }
 
     const used = await redis.get(`free:${ip}`) || 0;
     const remaining = FREE_LIMIT - used;
@@ -31,13 +37,13 @@ export default async function handler(req, res) {
   const OPENAI_KEY = req.headers['x-openai-key'] || process.env.OPENAI_KEY;
   const OPENROUTER_KEY = req.headers['x-openrouter-key'] || process.env.OPENROUTER_KEY;
 
-  const proEmail = req.headers['x-user-email'];
-  const isPro = proEmail && await redis.get(`pro_email:${proEmail}`);
   const isBYOK =!!(req.headers['x-groq-key'] || req.headers['x-openai-key'] || req.headers['x-openrouter-key']);
+  const tier = proEmail && await redis.get(`tier_email:${proEmail}`);
 
+  // Ask Forge logic - no credit cost
   if (ask) {
     const { url, key, model, provider } = selectModel('reasoning', { OPENAI_KEY, OPENROUTER_KEY, GROQ_KEY });
-    if (!key) return res.status(500).json({ error: 'No API key configured for reasoning' });
+    if (!key) return res.status(500).json({ error: 'No API key configured' });
 
     const askRes = await fetch(url, {
       method: 'POST',
@@ -45,7 +51,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model,
         messages: [
-          { role: 'system', content: 'You are Forge, an AI dev assistant. Answer questions about the project you are building. Be concise, technical, and helpful.' },
+          { role: 'system', content: 'You are Forge, an AI dev assistant. Be concise and technical.' },
           { role: 'user', content: ask }
         ]
       })
@@ -55,17 +61,41 @@ export default async function handler(req, res) {
     return res.status(200).json({ answer: askData.choices[0].message.content, provider });
   }
 
-  if (!isBYOK &&!isPro) {
-    const userId = `free:${ip}`;
-    const used = await redis.get(userId) || 0;
-    if (used >= FREE_LIMIT) return res.status(429).json({ error: 'Free limit reached', limit: FREE_LIMIT, upsell: true });
-    await redis.set(userId, used + 1, { ex: 2592000 });
+  // Credit check logic
+  if (!isBYOK) {
+    if (tier === 'PROMAX') {
+      // Unlimited - do nothing
+    } else if (tier === 'PRO') {
+      const credits = await redis.get(`credits_email:${proEmail}`) || 0;
+      if (credits <= 0) {
+        return res.status(429).json({ 
+          error: 'Out of credits', 
+          credits: 0, 
+          upsell: 'promax',
+          message: 'Upgrade to Pro Max for unlimited or wait for monthly refill'
+        });
+      }
+      await redis.decr(`credits_email:${proEmail}`);
+    } else {
+      // Free user
+      const userId = `free:${ip}`;
+      const used = await redis.get(userId) || 0;
+      if (used >= FREE_LIMIT) {
+        return res.status(429).json({ 
+          error: 'Free limit reached', 
+          limit: FREE_LIMIT, 
+          upsell: 'pro',
+          message: 'Upgrade to Pro for 250 credits/mo'
+        });
+      }
+      await redis.set(userId, used + 1, { ex: 2592000 });
+    }
   }
 
   const { url, key, model, provider } = selectModel(taskType || 'code', { OPENAI_KEY, OPENROUTER_KEY, GROQ_KEY });
-  if (!key) return res.status(500).json({ error: 'No API key configured. Add GROQ_KEY, OPENAI_KEY, or OPENROUTER_KEY to Vercel env vars.' });
+  if (!key) return res.status(500).json({ error: 'No API key configured' });
 
-  const system = `You are Forge. You MUST generate ALL files needed for the project to run. Never skip config files, package.json, index.html, vite.config.js, requirements.txt, or entry points. Output ONLY valid JSON: {"plan":"step by step explanation of architecture and files","files":[{"path":"...","content":"..."}]}. For React use Vite. For Flask include requirements.txt + app.py. No markdown, no explanations outside JSON.`;
+  const system = `You are Forge. Generate ALL files needed. Output ONLY valid JSON: {"plan":"...","files":[{"path":"...","content":"..."}]}. For React use Vite. For Flask include requirements.txt. No markdown.`;
 
   const llmRes = await fetch(url, {
     method: 'POST',
@@ -85,7 +115,12 @@ export default async function handler(req, res) {
 
   const data = await llmRes.json();
   const result = JSON.parse(data.choices[0].message.content);
-  return res.status(200).json({...result, provider});
+  
+  // Send remaining credits back
+  let creditsLeft = null;
+  if (tier === 'PRO') creditsLeft = await redis.get(`credits_email:${proEmail}`);
+  
+  return res.status(200).json({...result, provider, creditsLeft, tier});
 }
 
 function selectModel(taskType, keys) {

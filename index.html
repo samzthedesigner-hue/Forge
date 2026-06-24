@@ -1,385 +1,261 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forge - AI Builder</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { background: #0a0a0a; color: #e5e5e5; font-family: -apple-system, sans-serif; }
- .file-item { padding: 6px 10px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; }
- .file-item:hover { background: #1a1a1a; }
- .file-item.active { background: #2563eb; }
- .file-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
- .status-pending { background: #374151; color: #9ca3af; }
- .status-building { background: #1e40af; color: #60a5fa; }
- .status-done { background: #166534; color: #4ade80; }
- .status-error { background: #991b1b; color: #f87171; }
- .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 50; align-items: center; justify-content: center; }
- .modal-content { background: #1a1a1a; padding: 24px; border-radius: 8px; width: 90%; max-width: 500px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge - AI Web App Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
+       .code-font { font-family: 'JetBrains Mono', monospace; }
+       .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+       .welcome-bg { background: radial-gradient(circle at top middle, rgba(59, 130, 246, 0.15) 0%, rgba(11, 15, 25) 70%); }
+    </style>
 </head>
-<body class="h-screen flex flex-col">
-  <div class="flex justify-between items-center p-3 border-b border-gray-800">
-    <h1 class="font-bold text-xl">Forge</h1>
-    <div class="flex items-center gap-4">
-      <div id="creditDisplay" class="text-sm text-gray-400">Loading...</div>
-      <button id="settingsBtn" class="text-gray-400 hover:text-white">
-        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106a1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106a1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
-      </button>
-    </div>
-  </div>
+<body class="h-screen w-screen overflow-hidden flex flex-col relative">
 
-  <div class="flex-1 flex overflow-hidden">
-    <div class="w-80 border-r border-gray-800 flex flex-col">
-      <div class="p-3 border-b border-gray-800">
-        <textarea id="promptInput" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm resize-none" rows="3" placeholder="Build a calculator app..."></textarea>
-        <button id="sendBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">Generate Project</button>
-      </div>
-      
-      <div class="p-3 border-b border-gray-800">
-        <div class="text-xs font-bold mb-2">BUILD PLAN</div>
-        <div id="buildPlan" class="text-xs text-gray-400">Waiting for prompt...</div>
-      </div>
-      
-      <div class="p-3 border-b border-gray-800">
-        <div class="flex justify-between items-center mb-2">
-          <div class="text-xs font-bold">PROGRESS</div>
-          <div id="buildStatusText" class="text-xs text-gray-500">Idle</div>
+    <div id="welcome-screen" class="absolute inset-0 z-50 welcome-bg flex flex-col items-center justify-center p-4">
+        <div class="max-w-2xl text-center space-y-8 px-4">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-500 text-4xl mb-2 shadow-lg shadow-blue-500/10">
+                <i class="fas fa-cubes-stacked"></i>
+            </div>
+            <div class="space-y-4">
+                <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500">
+                    Build Web Apps <span class="text-blue-500">With AI</span>
+                </h1>
+                <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto font-light leading-relaxed">
+                    Generate, preview, and deploy full-stack applications instantly with parallel processing and Groq streaming.
+                </p>
+            </div>
+            <div>
+                <button id="get-started-btn" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-3 mx-auto text-lg cursor-pointer">
+                    <span>Get Started for Free</span>
+                    <i class="fas fa-arrow-right text-sm"></i>
+                </button>
+            </div>
         </div>
-        <div class="w-full bg-gray-800 rounded-full h-1.5">
-          <div id="buildBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+    </div>
+
+    <div id="app-layout" class="flex-1 flex flex-col h-full hidden">
+        <header class="h-16 border-b border-gray-800 bg-gray-950/50 backdrop-blur px-6 flex items-center justify-between z-10">
+            <div class="flex items-center space-x-3">
+                <div class="text-blue-500 text-xl"><i class="fas fa-cubes-stacked"></i></div>
+                <span class="font-bold text-lg tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">FORGE</span>
+                <span class="px-2 py-0.5 text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md font-medium">v1.1</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="credit-status-pill" class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-1.5 flex items-center space-x-3 text-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="credit-tier-label" class="text-xs font-semibold uppercase tracking-wider text-gray-400">FREE</span>
+                    <div class="h-4 w-px bg-gray-800"></div>
+                    <span class="text-gray-300 font-medium"><span id="credit-balance-display">0</span> Credits</span>
+                    <button id="upgrade-trigger-btn" class="text-xs text-blue-400 hover:text-blue-300 font-medium ml-1 transition-colors">Upgrade</button>
+                </div>
+                <button id="settings-trigger-btn" class="p-2.5 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl transition-all">
+                    <i class="fas fa-gear text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <section class="border-b border-gray-800 bg-gray-900/40 p-4 px-6 flex flex-col md:flex-row items-center gap-4">
+            <div class="w-full md:flex-1 relative">
+                <div class="absolute inset-y-0 left-4 flex items-center text-gray-500">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                </div>
+                <input id="prompt-input-field" type="text" placeholder="Describe the application you want to forge today..." class="w-full pl-12 pr-4 py-3 bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl text-white placeholder-gray-500 outline-none transition-all">
+            </div>
+            <button id="generate-action-btn" class="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md shadow-blue-600/10 cursor-pointer">
+                <span>Forge App</span>
+                <i class="fas fa-bolt"></i>
+            </button>
+        </section>
+
+        <div id="progress-container-bar" class="hidden border-b border-gray-800 bg-gray-950/80 px-6 py-3 space-y-2">
+            <div class="flex items-center justify-between text-xs font-medium">
+                <span id="progress-status-message" class="text-blue-400 flex items-center gap-2">
+                    <i class="fas fa-circle-notch animate-spin"></i> Spawning parallel builders...
+                </span>
+                <span id="progress-percentage-metric" class="text-gray-400">0%</span>
+            </div>
+            <div class="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                <div id="progress-fill-indicator" class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300" style="width: 0%"></div>
+            </div>
         </div>
-      </div>
-      
-      <div class="flex-1 overflow-y-auto">
-        <div class="p-3">
-          <div class="text-xs font-bold mb-2">FILES</div>
-          <div id="fileList" class="text-xs">
-            <div class="text-gray-600 text-center py-4">No files yet</div>
-          </div>
+
+        <main class="flex-1 flex overflow-hidden">
+            <aside class="w-64 border-r border-gray-800 bg-gray-950/30 flex flex-col">
+                <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Workspace Files</span>
+                    <i class="fas fa-folder-tree text-gray-500 text-xs"></i>
+                </div>
+                <div id="file-system-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                    <div class="text-xs text-gray-500 text-center py-8 italic">No project files compiled yet.</div>
+                </div>
+            </aside>
+            <section class="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <div class="flex-1 border-r border-gray-800 flex flex-col bg-gray-950/10">
+                    <div class="h-11 border-b border-gray-800 bg-gray-950/60 px-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-xs font-medium text-gray-400">
+                            <i class="fas fa-code text-blue-400"></i>
+                            <span id="active-file-title-indicator">index.html</span>
+                        </div>
+                        <span class="text-[11px] code-font text-gray-600">READ-ONLY COMPILED VIEW</span>
+                    </div>
+                    <div class="flex-1 overflow-auto p-4 bg-gray-950/50 code-font text-sm leading-relaxed text-blue-100 whitespace-pre-wrap selection:bg-blue-500/20" id="code-canvas-output"></div>
+                </div>
+                <div class="flex-1 flex flex-col bg-white">
+                    <div class="h-11 border-b border-gray-200 bg-gray-100 px-4 flex items-center justify-between text-gray-800">
+                        <div class="flex items-center space-x-2 text-xs font-medium text-gray-600">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>Live App Sandbox View</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <button id="sandbox-refresh-trigger" class="p-1 hover:bg-gray-200 rounded text-gray-500 transition-all"><i class="fas fa-rotate-right text-xs"></i></button>
+                        </div>
+                    </div>
+                    <iframe id="live-render-sandbox" class="flex-1 w-full h-full border-none bg-white" sandbox="allow-scripts allow-modals allow-popups"></iframe>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="settings-configuration-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl transform transition-all border border-gray-800">
+            <div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fas fa-sliders text-blue-500"></i>
+                    <h3 class="font-semibold text-lg text-white">System Environment Configuration</h3>
+                </div>
+                <button id="close-settings-modal-btn" class="text-gray-400 hover:text-white transition-colors p-1 hidden"><i class="fas fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-5 bg-gray-950/40">
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Account Identity Handle (Username or WhatsApp)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-user-gear"></i></span>
+                        <input id="identity-handle-input" type="text" placeholder="e.g., +2348012345678 or DevSam" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white transition-all text-sm">
+                    </div>
+                    <p class="text-[11px] text-gray-500 leading-normal">Your unique project isolation identification variable tracking active persistent storage spaces.</p>
+                </div>
+                <div class="h-px bg-gray-800/60 my-2"></div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Bring Your Own Key (BYOK)</label>
+                        <span class="px-2 py-0.5 text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded font-medium">OPTIONAL</span>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-key"></i></span>
+                        <input id="byok-secret-input" type="password" placeholder="gsk_..." class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white font-mono text-xs transition-all tracking-wider">
+                    </div>
+                    <p class="text-[11px] text-gray-500 leading-normal">Bypass default server credits limitations cleanly by providing an external valid secure Groq API license vector key directly.</p>
+                </div>
+            <div class="px-6 py-4 bg-gray-950 border-t border-gray-800 flex justify-end">
+                <button id="save-configuration-action" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl text-sm transition-all shadow-md shadow-blue-600/10 cursor-pointer">Save Environment Parameters</button>
+            </div>
         </div>
-      </div>
     </div>
-    
-    <div class="flex-1 flex flex-col">
-      <div class="p-2 border-b border-gray-800 text-xs font-bold">CODE</div>
-      <pre id="output" class="flex-1 p-3 overflow-auto text-xs bg-gray-950">// Select a file to view code</pre>
-    </div>
-    
-    <div class="w-96 border-l border-gray-800 flex flex-col">
-      <div class="p-2 border-b border-gray-800 text-xs font-bold">LIVE PREVIEW</div>
-      <iframe id="previewFrame" class="flex-1 bg-white"></iframe>
-    </div>
-  </div>
 
-  <div id="welcomeScreen" class="fixed inset-0 bg-black z-40 flex items-center justify-center">
-    <div class="text-center">
-      <h2 class="text-3xl font-bold mb-4">Welcome to Forge</h2>
-      <p class="text-gray-400 mb-6">Build apps with AI. Set your username to start.</p>
-      <button id="welcomeBtn" class="bg-blue-600 px-6 py-2 rounded">Get Started</button>
+    <div id="upgrade-tier-system-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl transform transition-all border border-gray-800">
+            <div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fas fa-crown text-amber-400"></i>
+                    <h3 class="font-semibold text-lg text-white">Upgrade Resource Plan Matrix</h3>
+                </div>
+                <button id="close-upgrade-modal-btn" class="text-gray-400 hover:text-white transition-colors p-1"><i class="fas fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-950/40">
+                <div class="border border-gray-800 bg-gray-950/60 p-4 rounded-xl relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-white text-base">Standard Community Tier</h4>
+                        <p class="text-xs text-gray-400 mt-1">Basic exploratory capabilities for general projects.</p>
+                        <div class="my-4 text-2xl font-extrabold text-white">Free <span class="text-xs text-gray-500 font-normal">/ perpetually</span></div>
+                        <ul class="text-xs space-y-2 text-gray-400">
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> 400 default balance units</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> Base speed streaming lines</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> 50 units flexible grace overdraft</li>
+                        </ul>
+                    </div>
+                    <button class="w-full mt-6 py-2 bg-gray-900 border border-gray-800 text-gray-400 font-medium text-xs rounded-lg cursor-not-allowed" disabled>Current Active Matrix</button>
+                </div>
+                <div class="border border-blue-500/30 bg-blue-950/10 p-4 rounded-xl relative overflow-hidden flex flex-col justify-between shadow-lg shadow-blue-500/5">
+                    <div class="absolute top-0 right-0 bg-blue-600 text-[9px] font-bold text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">Recommended</div>
+                    <div>
+                        <h4 class="font-bold text-white text-base">Developer Pro Matrix</h4>
+                        <p class="text-xs text-blue-400 mt-1">High speed enterprise asset build configuration capacity.</p>
+                        <div class="my-4 text-2xl font-extrabold text-white">Premium <span class="text-xs text-gray-400 font-normal">/ tier system</span></div>
+                        <ul class="text-xs space-y-2 text-gray-300">
+                            <li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> 10,000 Premium resource credits</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> Maximum prioritization pipelines</li>
+                            <li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> Unlimited parallel code generation</li>
+                        </ul>
+                    </div>
+                    <button id="purchase-matrix-action-trigger" class="w-full mt-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg transition-colors shadow-sm shadow-blue-600/20 cursor-pointer">Provision Access Matrix</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <div id="settingsModal" class="modal">
-    <div class="modal-content">
-      <h2 class="text-lg font-bold mb-4">Settings</h2>
-      <label class="text-sm text-gray-400">Your Username or WhatsApp</label>
-      <input id="userId" type="text" class="w-full bg-gray-900 border border-gray-700 rounded p-2 mt-1 mb-4 text-sm" placeholder="@yourname or +234...">
-      <button id="saveUserBtn" class="w-full bg-blue-600 py-2 rounded text-sm mb-6">Save Username</button>
-      <label class="text-sm text-gray-400">BYOK - Bring Your Own Key</label>
-      <select id="byokProvider" class="w-full bg-gray-900 border border-gray-700 rounded p-2 mt-1 mb-2 text-sm">
-        <option value="">None - Use Forge credits</option>
-        <option value="groq">Groq - Fastest</option>
-        <option value="openai">OpenAI</option>
-        <option value="openrouter">OpenRouter</option>
-      </select>
-      <input id="byokKey" type="password" class="w-full bg-gray-900 border border-gray-700 rounded p-2 mb-4 text-sm" placeholder="sk-... or gsk_...">
-      <button id="saveBYOKBtn" class="w-full bg-gray-700 py-2 rounded text-sm mb-4">Save API Key</button>
-      <button id="closeSettingsBtn" class="w-full text-gray-500 text-sm">Close</button>
-    </div>
-  </div>
-
-  <div id="upgradeModal" class="modal">
-    <div class="modal-content">
-      <h2 class="text-lg font-bold mb-4">Out of Credits</h2>
-      <p id="upgradeMessage" class="text-sm text-gray-400 mb-6"></p>
-      <button id="continueFreeBtn" class="w-full bg-gray-700 py-2 rounded text-sm mb-2">Continue with Free</button>
-      <button id="upgradeSettingsBtn" class="w-full bg-blue-600 py-2 rounded text-sm">Add API Key for Unlimited</button>
-    </div>
-  </div>
 
 <script>
 window.addEventListener('load', function() {
-  const sendBtn = document.getElementById('sendBtn');
-  const promptInput = document.getElementById('promptInput');
-  const output = document.getElementById('output');
-  const buildBar = document.getElementById('buildBar');
-  const buildStatusText = document.getElementById('buildStatusText');
-  const fileList = document.getElementById('fileList');
-  const welcomeScreen = document.getElementById('welcomeScreen');
-  const previewFrame = document.getElementById('previewFrame');
-  const settingsBtn = document.getElementById('settingsBtn');
-  const welcomeBtn = document.getElementById('welcomeBtn');
-  const saveUserBtn = document.getElementById('saveUserBtn');
-  const saveBYOKBtn = document.getElementById('saveBYOKBtn');
-  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-  const continueFreeBtn = document.getElementById('continueFreeBtn');
-  const upgradeSettingsBtn = document.getElementById('upgradeSettingsBtn');
+    console.log('Forge loaded');
 
-  let userId = localStorage.getItem('forge_userid');
-  let byokProvider = localStorage.getItem('forge_byok_provider') || '';
-  let byokKey = localStorage.getItem('forge_byok_key') || '';
-  let currentProject = { files: {}, activeFile: null };
-  let buildInProgress = false;
-  let abortController = null;
-
-  promptInput.addEventListener('input', () => {
-    promptInput.style.height = 'auto';
-    promptInput.style.height = promptInput.scrollHeight + 'px';
-  });
-
-  if (userId) {
-    welcomeScreen.style.display = 'none';
-    updateCreditUI();
-  }
-
-  async function updateCreditUI() {
-    const creditEl = document.getElementById('creditDisplay');
-    if (!userId) return creditEl.innerText = 'No user set';
-    try {
-      const res = await fetch('/api/check-credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: userId, action: 'check' })
-      });
-      const data = await res.json();
-      const tierColor = data.tier === 'PROMAX'? '#7c3aed' : data.tier === 'PRO'? '#4f46e5' : '#666';
-      const creditsText = byokKey? 'BYOK' : data.tier === 'PROMAX'? 'Unlimited' : `${data.credits}`;
-      creditEl.innerHTML = `<span style="color:${tierColor};font-weight:bold">${data.tier}</span> • ${creditsText}${data.inGrace? ' • Grace' : ''}`;
-    } catch (err) {
-      creditEl.innerText = 'Error';
-      console.error(err);
-    }
-  }
-
-  async function startBuild() {
-    if (buildInProgress) return;
-    if (!userId) return openSettings();
-    
-    const prompt = promptInput.value.trim();
-    if (!prompt) return alert('Enter a prompt first');
-
-    buildInProgress = true;
-    abortController = new AbortController();
-    sendBtn.disabled = true;
-    sendBtn.innerText = 'Starting...';
-    welcomeScreen.style.display = 'none';
-    
-    const planBox = document.getElementById('buildPlan');
-    planBox.innerHTML = 'Planning...';
-    buildBar.style.width = '5%';
-    buildStatusText.innerText = 'Starting...';
-    fileList.innerHTML = '<div class="text-gray-600 text-center py-4">Planning...</div>';
-    currentProject = { files: {}, activeFile: null };
-    
-    try {
-      sendBtn.innerText = 'Planning...';
-      
-      const planRes = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt, userId: userId, action: 'plan',
-          byok: byokKey? { provider: byokProvider, key: byokKey } : null
-        }),
-        signal: abortController.signal
-      });
-      
-      if (!planRes.ok) {
-        const errData = await planRes.json();
-        if (planRes.status === 402) {
-          document.getElementById('upgradeMessage').innerText = errData.message;
-          document.getElementById('upgradeModal').style.display = 'flex';
+    let currentUserId = localStorage.getItem('forge_user_id') || '';
+    let currentApiKey = localStorage.getItem('forge_byok_key') || '';
+    let currentProject = {
+        files: {
+            name: "index.html",
+            content: `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex items-center justify-center text-white p-4"><div class="text-center space-y-4 bg-black/30 p-8 rounded-2xl backdrop-blur-md border border-white/10 max-w-md"><h1 class="text-3xl font-extrabold tracking-tight">Active Engine Ready</h1><p class="text-indigo-200 text-sm">Forge has successfully synchronized operational memory pipelines.</p></div></body></html>`
         }
-        throw new Error(errData.error || `API ${planRes.status}`);
-      }
-      
-      const planData = await planRes.json();
-      if (!planData.files?.length) throw new Error('No plan generated');
-      
-      planBox.innerHTML = `<div><b>Project:</b> ${planData.projectName || 'Untitled'}</div><div><b>Files:</b> ${planData.files.length}</div>`;
-      
-      fileList.innerHTML = '';
-      planData.files.forEach(f => {
-        currentProject.files[f.path] = { path: f.path, content: '', status: 'pending', description: f.description };
-        addFileToList(f.path, 'pending');
-      });
-      
-      sendBtn.innerText = `Building ${planData.files.length} files...`;
-      buildStatusText.innerText = `Generating ${planData.files.length} files...`;
-      buildBar.style.width = '20%';
-      
-      let completed = 0;
-      const startTime = Date.now();
-      
-      const filePromises = planData.files.map(async (file) => {
-        updateFileStatus(file.path, 'building');
-        
-        const fileRes = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            prompt, userId: userId, action: 'file',
-            filePath: file.path, fileDescription: file.description,
-            existingFiles: planData.files.map(f => f.path),
-            byok: byokKey? { provider: byokProvider, key: byokKey } : null
-          }),
-          signal: abortController.signal
-        });
-        
-        if (!fileRes.ok) throw new Error(`${file.path} failed`);
-        
-        const reader = fileRes.body.getReader();
-        const decoder = new TextDecoder();
-        let code = '';
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          code += decoder.decode(value);
-          currentProject.files[file.path].content = code;
-          if (currentProject.activeFile === file.path) output.innerText = code;
-          updatePreview();
-        }
-        
-        code = code.replace(/```[\w]*\n/g, '').replace(/```$/g, '').trim();
-        currentProject.files[file.path].content = code;
-        currentProject.files[file.path].status = 'done';
-        updateFileStatus(file.path, 'done');
-        if (!currentProject.activeFile) selectFile(file.path);
-        
-        completed++;
-        buildBar.style.width = `${20 + (completed/planData.files.length)*80}%`;
-        buildStatusText.innerText = `Generated ${completed}/${planData.files.length}`;
-      });
-      
-      await Promise.all(filePromises);
-      
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      buildBar.style.width = '100%';
-      buildStatusText.innerText = `Done in ${elapsed}s`;
-      updatePreview();
-      if (!byokKey) updateCreditUI();
-      
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        buildStatusText.innerText = 'Cancelled';
-      } else {
-        buildStatusText.innerText = `Error`;
-        planBox.innerHTML = `<span style="color:#ef4444">Error: ${err.message}</span>`;
-      }
-      console.error(err);
-    } finally {
-      buildInProgress = false;
-      abortController = null;
-      sendBtn.disabled = false;
-      sendBtn.innerText = 'Generate Project';
+    };
+
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const getStartedBtn = document.getElementById('get-started-btn');
+    const appLayout = document.getElementById('app-layout');
+    const settingsModal = document.getElementById('settings-configuration-modal');
+    const settingsTriggerBtn = document.getElementById('settings-trigger-btn');
+    const closeSettingsModalBtn = document.getElementById('close-settings-modal-btn');
+    const identityHandleInput = document.getElementById('identity-handle-input');
+    const byokSecretInput = document.getElementById('byok-secret-input');
+    const saveConfigurationAction = document.getElementById('save-configuration-action');
+    const upgradeModal = document.getElementById('upgrade-tier-system-modal');
+    const upgradeTriggerBtn = document.getElementById('upgrade-trigger-btn');
+    const closeUpgradeModalBtn = document.getElementById('close-upgrade-modal-btn');
+    const purchaseMatrixActionTrigger = document.getElementById('purchase-matrix-action-trigger');
+    const creditTierLabel = document.getElementById('credit-tier-label');
+    const creditBalanceDisplay = document.getElementById('credit-balance-display');
+    const promptInputField = document.getElementById('prompt-input-field');
+    const generateActionBtn = document.getElementById('generate-action-btn');
+    const progressContainerBar = document.getElementById('progress-container-bar');
+    const progressStatusMessage = document.getElementById('progress-status-message');
+    const progressPercentageMetric = document.getElementById('progress-percentage-metric');
+    const progressFillIndicator = document.getElementById('progress-fill-indicator');
+    const fileSystemList = document.getElementById('file-system-list');
+    const activeFileTitleIndicator = document.getElementById('active-file-title-indicator');
+    const codeCanvasOutput = document.getElementById('code-canvas-output');
+    const liveRenderSandbox = document.getElementById('live-render-sandbox');
+    const sandboxRefreshTrigger = document.getElementById('sandbox-refresh-trigger');
+
+    if (currentUserId) {
+        welcomeScreen.classList.add('hidden');
+        appLayout.classList.remove('hidden');
+        closeSettingsModalBtn.classList.remove('hidden');
+        identityHandleInput.value = currentUserId;
+        byokSecretInput.value = currentApiKey;
+        synchronizeAccountResourceLimits();
+        renderWorkspaceStructureState();
     }
-  }
 
-  function addFileToList(path, status) {
-    const div = document.createElement('div');
-    div.className = 'file-item';
-    div.dataset.path = path;
-    div.onclick = () => selectFile(path);
-    div.innerHTML = `<span>${path}</span><span class="file-status status-${status}">${status}</span>`;
-    fileList.appendChild(div);
-  }
+    getStartedBtn.onclick = function(e) {
+        console.log('Get Started clicked');
+        e.preventDefault();
+        settingsModal.classList.remove('hidden');
+    };
 
-  function updateFileStatus(path, status) {
-    const item = document.querySelector(`.file-item[data-path="${path}"]`);
-    if (item) {
-      const statusEl = item.querySelector('.file-status');
-      statusEl.className = `file-status status-${status}`;
-      statusEl.innerText = status;
-    }
-  }
-
-  function selectFile(path) {
-    currentProject.activeFile = path;
-    document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
-    document.querySelector(`.file-item[data-path="${path}"]`)?.classList.add('active');
-    output.innerText = currentProject.files.content || '// Empty file';
-  }
-
-  function updatePreview() {
-    const htmlFile = currentProject.files['index.html'] || currentProject.files['app.jsx'] || currentProject.files['App.js'];
-    if (!htmlFile?.content) return;
-    
-    let html = htmlFile.content;
-    
-    if (htmlFile.path.includes('.jsx') || htmlFile.path.includes('App.js')) {
-      const cssFile = currentProject.files['index.css'] || currentProject.files['styles.css'] || currentProject.files['App.css'];
-      const jsFiles = Object.values(currentProject.files).filter(f => f.path.endsWith('.js') || f.path.endsWith('.jsx')).map(f => f.content).join('\n');
-      html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/@babel/standalone/babel.min.js"></script><script src="https://cdn.tailwindcss.com"></script><style>${cssFile?.content || ''}</style></head><body><div id="root"></div><script type="text/babel">${jsFiles}const root = ReactDOM.createRoot(document.getElementById('root'));root.render(<App />);</script></body></html>`;
-    } else if (!html.includes('<!DOCTYPE')) {
-      const cssFile = currentProject.files['style.css'] || currentProject.files['styles.css'];
-      const jsFile = currentProject.files['script.js'];
-      html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"></script><style>${cssFile?.content || ''}</style></head><body>${html}<script>${jsFile?.content || ''}</script></body></html>`;
-    }
-    
-    previewFrame.srcdoc = html;
-  }
-
-  function openSettings() {
-    document.getElementById('settingsModal').style.display = 'flex';
-    document.getElementById('userId').value = userId || '';
-    document.getElementById('byokProvider').value = byokProvider || '';
-    document.getElementById('byokKey').value = byokKey || '';
-  }
-  function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
-  function saveUser() {
-    const id = document.getElementById('userId').value.trim();
-    if (!id) return alert('Enter a username or WhatsApp number');
-    localStorage.setItem('forge_userid', id);
-    userId = id;
-    updateCreditUI();
-    closeSettings();
-    welcomeScreen.style.display = 'none';
-  }
-  function saveBYOK() {
-    const provider = document.getElementById('byokProvider').value;
-    const key = document.getElementById('byokKey').value.trim();
-    if (provider &&!key) return alert('Enter your API key');
-    localStorage.setItem('forge_byok_provider', provider);
-    localStorage.setItem('forge_byok_key', key);
-    byokProvider = provider;
-    byokKey = key;
-    updateCreditUI();
-    alert(provider? 'BYOK saved. Unlimited builds enabled.' : 'BYOK cleared.');
-    closeSettings();
-  }
-  function closeUpgradeModal() { document.getElementById('upgradeModal').style.display = 'none'; }
-  function continueOnFree() {
-    closeUpgradeModal();
-    document.getElementById('buildPlan').innerHTML = 'Build cancelled. Add your API key in Settings for unlimited builds.';
-    if (abortController) abortController.abort();
-  }
-
-  sendBtn.onclick = startBuild;
-  settingsBtn.onclick = openSettings;
-  welcomeBtn.onclick = openSettings;
-  saveUserBtn.onclick = saveUser;
-  saveBYOKBtn.onclick = saveBYOK;
-  closeSettingsBtn.onclick = closeSettings;
-  continueFreeBtn.onclick = continueOnFree;
-  upgradeSettingsBtn.onclick = () => {
-    closeUpgradeModal();
-    openSettings();
-  };
-  window.onclick = e => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
-});
-</script>
-</body>
-</html>
+    settingsTriggerBtn.onclick = function() { settingsModal.classList.remove('hidden'); };
+    closeSettingsModalBtn.onclick = function() { if (currentUserId) settingsModal.classList.add('hidden'); };
+    upgradeTriggerBtn.onclick = function() { upgradeModal.classList.remove('hidden'); };
+    closeUpgradeModalBtn.onclick = function() { upgradeModal.classList.add('hidden'); };
+    purchaseMatrixActionTrigger.onclick = function() { alert("Pro Matrix provision routing triggered."); upgradeMod

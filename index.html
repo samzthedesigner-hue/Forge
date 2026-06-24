@@ -155,7 +155,7 @@ body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
 <button id="copy-share-link-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium">Copy</button>
 </div>
 <p class="text-xs text-gray-500">Anyone with this link can view your app. Expires in 30 days.</p>
-</div></div></div>
+</div></div></div></div>
 
 <script>
 window.addEventListener('load', function() {
@@ -336,6 +336,10 @@ if (data.token) {
 fullCode += data.token;
 codeCanvasOutput.innerText = fullCode;
 }
+if (data.creditsLeft!== undefined) {
+creditBalanceDisplay.innerText = data.creditsLeft;
+creditTierLabel.innerText = data.tier;
+}
 if (data.done) {
 currentProject.files.content = data.code;
 currentProject.projectId = data.projectId;
@@ -379,8 +383,8 @@ shareProjectBtn.onclick = function() {
         },
         () => {
           fetch(`https://api.microlink.io/?url=${encodeURIComponent(shareUrl)}&screenshot=true&meta=false`)
-        .then(r => r.json())
-        .then(data => {
+      .then(r => r.json())
+      .then(data => {
               if (data.status === 'success' && data.data?.screenshot?.url) {
                 sharePreviewImg.src = data.data.screenshot.url;
                 sharePreviewImg.classList.remove('hidden');
@@ -389,7 +393,7 @@ shareProjectBtn.onclick = function() {
                 sharePreviewImg.alt = 'Preview unavailable';
               }
             })
-        .catch(() => {
+      .catch(() => {
               sharePreviewImg.alt = 'Preview unavailable';
             });
         }

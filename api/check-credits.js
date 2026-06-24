@@ -1,107 +1,39 @@
 import { Redis } from '@upstash/redis';
 
-export const config = { runtime: 'edge' };
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
-const redis = Redis.fromEnv();
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method!== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { userId, action = 'check', buildCost = 0 } = await req.json();
-
-    if (!userId) {
-      return Response.json({ error: 'User ID required' }, { status: 400 });
-    }
-
-    const safeUserKey = String(userId).trim().replace(/[^a-zA-Z0-9_\-+:]/g, '');
-    const creditsKey = `credits_user:${safeUserKey}`;
-    const tierKey = `tier_user:${safeUserKey}`;
-    const graceKey = `grace_user:${safeUserKey}`;
-
-    let [tier, credits, graceUsed] = await Promise.all([
-      redis.get(tierKey),
-      redis.get(creditsKey),
-      redis.get(graceKey)
-    ]);
-
-    if (tier === null) {
-      tier = 'FREE';
-      await redis.set(tierKey, 'FREE');
-    }
+    const { userId, action } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    
+    let credits = await redis.get(`credits:${userId}`);
     if (credits === null) {
       credits = 400;
-      await redis.set(creditsKey, 400);
+      await redis.set(`credits:${userId}`, 400);
     }
-    if (graceUsed === null) {
-      graceUsed = 0;
-      await redis.set(graceKey, 0);
-    }
-
-    credits = parseInt(credits, 10);
-    graceUsed = parseInt(graceUsed, 10);
-    const graceLimit = 50;
-    const graceRemaining = Math.max(0, graceLimit - graceUsed);
-
-    if (action === 'check') {
-      return Response.json({
-        success: true,
-        userId: safeUserKey,
-        tier,
-        credits,
-        graceCredits: graceRemaining,
-        totalAvailable: credits + graceRemaining
-      });
-    }
-
+    
     if (action === 'deduct') {
-      const totalAvailable = credits + graceRemaining;
-
-      if (totalAvailable < buildCost) {
-        return Response.json({
-          success: false,
-          error: 'INSUFFICIENT_CREDITS',
-          message: `Need ${buildCost} credits but only ${totalAvailable} available.`,
-          tier,
-          credits,
-          graceCredits: graceRemaining,
-          upgrade: true
-        }, { status: 402 });
+      const { amount = 1 } = req.body;
+      if (credits < amount) {
+        return res.status(402).json({ error: 'Insufficient credits' });
       }
-
-      let newCredits = credits;
-      let newGraceUsed = graceUsed;
-      let remainingCost = buildCost;
-
-      if (remainingCost <= newCredits) {
-        newCredits -= remainingCost;
-      } else {
-        remainingCost -= newCredits;
-        newCredits = 0;
-        newGraceUsed += remainingCost;
-      }
-
-      await Promise.all([
-        redis.set(creditsKey, newCredits),
-        redis.set(graceKey, newGraceUsed)
-      ]);
-
-      return Response.json({
-        success: true,
-        deducted: buildCost,
-        tier,
-        credits: newCredits,
-        graceCredits: Math.max(0, graceLimit - newGraceUsed),
-        totalAvailable: newCredits + Math.max(0, graceLimit - newGraceUsed)
-      });
+      credits = await redis.decrby(`credits:${userId}`, amount);
     }
-
-    return Response.json({ error: 'Invalid action' }, { status: 400 });
-
-  } catch (err) {
-    console.error('Credit check error:', err);
-    return Response.json({ error: 'Credit system error: ' + err.message }, { status: 500 });
+    
+    res.status(200).json({ 
+      credits: parseInt(credits), 
+      tier: credits > 400? 'PRO' : 'FREE' 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Redis error' });
   }
-      }
+}

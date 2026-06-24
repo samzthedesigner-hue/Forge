@@ -1,147 +1,147 @@
-const sendBtn = document.getElementById('sendBtn')
-const promptInput = document.getElementById('prompt')
-const output = document.getElementById('output')
-const buildBar = document.getElementById('buildBar')
-const buildToggle = document.getElementById('buildToggle')
-const buildStatusText = document.getElementById('buildStatusText')
-const fileList = document.getElementById('fileList')
-const welcomeScreen = document.getElementById('welcomeScreen')
-const exampleChips = document.querySelectorAll('.example-chip')
-
-// Auto-resize textarea
-promptInput.addEventListener('input', () => {
-  promptInput.style.height = 'auto'
-  promptInput.style.height = promptInput.scrollHeight + 'px'
-})
-
-// Collapsible build bar
-buildToggle.addEventListener('click', () => {
-  buildBar.classList.toggle('collapsed')
-})
-
-// Hide welcome when first message sent
-function hideWelcome() {
-  if (welcomeScreen) welcomeScreen.style.display = 'none'
+// Pro + BYOK key handling
+function getKeys() {
+  return {
+    groq: localStorage.getItem('forge_groq_key') || '',
+    openai: localStorage.getItem('forge_openai_key') || '',
+    openrouter: localStorage.getItem('forge_openrouter_key') || ''
+  };
 }
 
-// Example chips fill input
-exampleChips.forEach(chip => {
-  chip.addEventListener('click', () => {
-    promptInput.value = chip.textContent
-    promptInput.focus()
-  })
-})
+function getUserEmail() {
+  return localStorage.getItem('forge_user_email') || '';
+}
 
-sendBtn.addEventListener('click', handleSend)
-promptInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' &&!e.shiftKey) {
-    e.preventDefault()
-    handleSend()
-  }
-})
+function saveKeys(keys) {
+  if (keys.groq) localStorage.setItem('forge_groq_key', keys.groq);
+  if (keys.openai) localStorage.setItem('forge_openai_key', keys.openai);
+  if (keys.openrouter) localStorage.setItem('forge_openrouter_key', keys.openrouter);
+}
 
-async function handleSend() {
-  const prompt = promptInput.value.trim()
-  if (!prompt) return
+function saveUserEmail(email) {
+  if (email) localStorage.setItem('forge_user_email', email);
+}
 
-  // Add user message
-  addMessage(prompt, 'user')
-  hideWelcome()
-  promptInput.value = ''
-  promptInput.style.height = 'auto'
+// Your existing elements from script.js
+const sendBtn = document.getElementById('sendBtn');
+const promptInput = document.getElementById('promptInput') || document.getElementById('prompt');
+const output = document.getElementById('output');
+const buildBar = document.getElementById('buildBar');
+const buildToggle = document.getElementById('buildToggle');
+const buildStatusText = document.getElementById('buildStatusText');
+const fileList = document.getElementById('fileList');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const exampleChips = document.querySelectorAll('.chip');
 
-  sendBtn.disabled = true
-  showBuildBar()
+// Auto-resize textarea - keep your existing code
+if (promptInput) {
+  promptInput.addEventListener('input', () => {
+    promptInput.style.height = 'auto';
+    promptInput.style.height = promptInput.scrollHeight + 'px';
+  });
+}
 
+// Add free counter display if you have one in HTML
+const freeCounter = document.getElementById('freeCounter');
+
+async function checkFreeRemaining() {
+  if (!freeCounter) return;
   try {
     const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    })
-
-    const data = await res.json()
-
-    if (res.status === 429) {
-      hideBuildBar()
-      addMessage(data.error, 'assistant')
-    } else if (!res.ok) {
-      hideBuildBar()
-      addMessage(data.error || 'Something went wrong', 'assistant')
-    } else {
-      // Simulate file building + typewriter effect
-      await simulateBuild(data.result)
-      hideBuildBar()
-    }
-  } catch (err) {
-    hideBuildBar()
-    addMessage('Network error. Try again.', 'assistant')
-  } finally {
-    sendBtn.disabled = false
-  }
-}
-
-function addMessage(text, role) {
-  const msg = document.createElement('div')
-  msg.className = `message ${role}`
-  msg.textContent = text
-  output.appendChild(msg)
-  output.scrollTop = output.scrollHeight
-}
-
-function showBuildBar() {
-  buildBar.classList.remove('hidden')
-  fileList.innerHTML = ''
-  buildStatusText.textContent = 'Building...'
-}
-
-function hideBuildBar() {
-  setTimeout(() => {
-    buildBar.classList.add('hidden')
-  }, 1000)
-}
-
-async function simulateBuild(result) {
-  // Fake file list - replace with real file data from your API later
-  const files = ['index.html', 'style.css', 'script.js', 'package.json']
-
-  for (let i = 0; i < files.length; i++) {
-    const fileItem = document.createElement('div')
-    fileItem.className = 'file-item active'
-    fileItem.textContent = `▸ ${files[i]}`
-    fileList.appendChild(fileItem)
-
-    await sleep(600)
-    fileItem.className = 'file-item done'
-    fileItem.textContent = `✓ ${files[i]}`
-  }
-
-  buildStatusText.textContent = 'Complete'
-  await sleep(500)
-
-  // Type out response
-  await typeWriter(result)
-}
-
-function typeWriter(text) {
-  return new Promise((resolve) => {
-    const msg = document.createElement('div')
-    msg.className = 'message assistant'
-    output.appendChild(msg)
-
-    let i = 0
-    const interval = setInterval(() => {
-      msg.textContent += text[i]
-      i++
-      output.scrollTop = output.scrollHeight
-      if (i >= text.length) {
-        clearInterval(interval)
-        resolve()
+      method: 'OPTIONS',
+      headers: {
+        'X-Groq-Key': getKeys().groq,
+        'X-OpenAI-Key': getKeys().openai,
+        'X-OpenRouter-Key': getKeys().openrouter,
+        'X-User-Email': getUserEmail()
       }
-    }, 15)
-  })
+    });
+    const remaining = res.headers.get('X-Free-Remaining');
+    if (remaining !== null) {
+      freeCounter.textContent = `Free: ${remaining} left`;
+    }
+  } catch (e) {}
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-  }
+// Main generate function - uses your sendBtn
+if (sendBtn) {
+  sendBtn.onclick = async () => {
+    const prompt = promptInput.value;
+    const lang = document.getElementById('lang')?.value || 'react';
+    const keys = getKeys();
+
+    if (!prompt) return alert('Enter a prompt');
+
+    if (welcomeScreen) welcomeScreen.style.display = 'none';
+    if (output) output.textContent = 'Generating...';
+    if (buildStatusText) buildStatusText.textContent = 'Building...';
+    if (buildBar) buildBar.style.display = 'block';
+    sendBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Groq-Key': keys.groq,
+          'X-OpenAI-Key': keys.openai,
+          'X-OpenRouter-Key': keys.openrouter,
+          'X-User-Email': getUserEmail()
+        },
+        body: JSON.stringify({ prompt, lang, taskType: 'code' })
+      });
+
+      const data = await res.json();
+
+      if (res.status === 429 && data.upsell) {
+        if (output) output.innerHTML = `<div style="color:#f44">Free limit reached. <a href="#" onclick="openSettings()" style="color:#4f46e5">Add your API key</a> or <a href="https://buy.stripe.com/test_00g00g" target="_blank" style="color:#4f46e5">Upgrade to Pro $5/mo</a> for unlimited.</div>`;
+        return;
+      }
+
+      if (!res.ok) throw new Error(data.error || 'Generation failed');
+
+      // Display plan
+      if (output) output.innerHTML = `<b>Plan:</b><br>${data.plan}<br><br><b>Files:</b><br>`;
+      
+      // Display files in your fileList
+      if (fileList) {
+        fileList.innerHTML = '';
+        data.files.forEach(f => {
+          const div = document.createElement('div');
+          div.innerHTML = `<b>${f.path}</b><pre>${f.content}</pre>`;
+          fileList.appendChild(div);
+        });
+      }
+
+      if (buildStatusText) buildStatusText.textContent = `Done via ${data.provider}`;
+
+    } catch (err) {
+      if (output) output.textContent = `Error: ${err.message}`;
+      if (buildStatusText) buildStatusText.textContent = 'Error';
+    } finally {
+      sendBtn.disabled = false;
+      checkFreeRemaining();
+    }
+  };
+}
+
+// Settings modal - add this if you don't have it
+function openSettings() {
+  const modal = document.getElementById('settingsModal');
+  if (!modal) return alert('Add settings modal to HTML');
+  
+  const keys = getKeys();
+  document.getElementById('groqKey').value = keys.groq;
+  document.getElementById('openaiKey').value = keys.openai;
+  document.getElementById('openrouterKey').value = keys.openrouter;
+  document.getElementById('userEmail').value = getUserEmail();
+  modal.style.display = 'flex';
+}
+
+// Example chips
+exampleChips.forEach(chip => {
+  chip.onclick = () => {
+    if (promptInput) promptInput.value = chip.textContent;
+  };
+});
+
+checkFreeRemaining();

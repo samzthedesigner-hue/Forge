@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import OpenAI from 'openai';
 
 const redis = Redis.fromEnv();
 
@@ -6,16 +7,49 @@ export default async function handler(req, res) {
   const { prompt, email, action, filePath, fileDescription, existingFiles, byok } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
   
-  // Credit check only if not BYOK and not file-level call
-  if (!byok?.key && action!== 'file') {
-    const estimatedCost = Math.max(15, Math.min(50, Math.ceil(prompt.length / 30))); // Higher for multi-file
-    const creditCheck = await fetch(`${process.env.VERCEL_URL}/api/check-credits`, {
+  // Use BYOK or fallback to your Vercel keys - matches your naming
+  let aiClient;
+  let model = 'gpt-4o-mini';
+  
+  if (byok?.key) {
+    if (byok.provider === 'openai') {
+      aiClient = new OpenAI({ apiKey: byok.key });
+      model = 'gpt-4o-mini';
+    } else if (byok.provider === 'groq') {
+      aiClient = new OpenAI({ apiKey: byok.key, baseURL: 'https://api.groq.com/openai/v1' });
+      model = 'llama-3.1-70b-versatile'; // 10x faster
+    } else if (byok.provider === 'openrouter') {
+      aiClient = new OpenAI({ apiKey: byok.key, baseURL: 'https://openrouter.ai/api/v1' });
+      model = 'openai/gpt-4o-mini';
+    } else {
+      return res.status(400).json({ error: 'Unsupported BYOK provider' });
+    }
+  } else {
+    // Fallback to your Vercel env vars - using your exact names
+    if (process.env.GROQ_KEY) {
+      aiClient = new OpenAI({ apiKey: process.env.GROQ_KEY, baseURL: 'https://api.groq.com/openai/v1' });
+      model = 'llama-3.1-70b-versatile';
+    } else if (process.env.OPENROUTER_KEY) {
+      aiClient = new OpenAI({ apiKey: process.env.OPENROUTER_KEY, baseURL: 'https://openrouter.ai/api/v1' });
+      model = 'openai/gpt-4o-mini';
+    } else if (process.env.OPENAI_KEY) {
+      aiClient = new OpenAI({ apiKey: process.env.OPENAI_KEY });
+      model = 'gpt-4o-mini';
+    } else {
+      return res.status(500).json({ error: 'No AI API key found in environment' });
+    }
+  }
+  
+  // Credit check only if not BYOK and planning
+  if (!byok?.key && action === 'plan') {
+    const estimatedCost = Math.max(20, Math.min(60, Math.ceil(prompt.length / 20)));
+    const creditCheck = await fetch(`/api/check-credits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, action: 'check', buildCost: estimatedCost })
+      body: JSON.stringify({ email, action: 'deduct', buildCost: estimatedCost })
     }).then(r => r.json());
     
-    if (!creditCheck.canBuild) {
+    if (!creditCheck.success) {
       return res.status(402).json({
         error: 'INSUFFICIENT_CREDITS',
         message: `This project needs ~${estimatedCost} credits. You have ${creditCheck.credits}.`,
@@ -24,101 +58,53 @@ export default async function handler(req, res) {
         upgrade: true
       });
     }
-    
-    await fetch(`${process.env.VERCEL_URL}/api/check-credits`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, action: 'deduct', buildCost: estimatedCost })
-    });
   }
   
   try {
-    // STEP 1: PLAN - Return file structure
+    // STEP 1: PLAN - Return file structure in 1 AI call
     if (action === 'plan') {
-      // TODO: Replace with your actual AI call to plan the project
-      // Example: Ask GPT-4 "List files needed for: {prompt}. Return JSON: {projectName, files:[{path,description}]}"
-      const isReact = prompt.toLowerCase().includes('react');
-      const isTodo = prompt.toLowerCase().includes('todo');
-      
-      const files = isReact? [
-        { path: 'index.html', description: 'HTML entry point with React CDN' },
-        { path: 'App.jsx', description: 'Main React component with state logic' },
-        { path: 'index.css', description: 'Tailwind + custom styles' }
-      ] : [
-        { path: 'index.html', description: 'Main HTML structure' },
-        { path: 'style.css', description: 'CSS styling' },
-        { path: 'script.js', description: 'JavaScript app logic' }
-      ];
-      
-      return res.json({ 
-        success: true, 
-        projectName: isTodo? 'TodoApp' : 'MyApp',
-        files 
+      const completion = await aiClient.chat.completions.create({
+        model: model,
+        messages: [{
+          role: 'system',
+          content: 'You are a senior dev. Given a prompt, return ONLY JSON: {projectName: string, files: [{path: string, description: string}]}. Max 5 files. For web apps use: index.html, style.css, script.js. For React use: index.html, App.jsx, index.css. No explanations.'
+        }, {
+          role: 'user',
+          content: `App to build: ${prompt}`
+        }],
+        response_format: { type: "json_object" },
+        temperature: 0.2
       });
+      
+      const plan = JSON.parse(completion.choices[0].message.content);
+      return res.json({ success: true,...plan });
     }
     
     // STEP 2: FILE - Generate individual file
     if (action === 'file') {
-      // TODO: Replace with your actual AI call per file
-      // Use byok.key if present, else use your default API key
-      // Prompt: "Write {filePath} for this app: {prompt}. Description: {fileDescription}. Existing files: {existingFiles}"
+      const completion = await aiClient.chat.completions.create({
+        model: model,
+        messages: [{
+          role: 'system',
+          content: `You are an expert coder. Write ONLY the code for ${filePath}. No explanations, no markdown fences. Description: ${fileDescription}. Existing files: ${existingFiles?.join(', ') || 'none'}. Make it production-ready and functional. Use Tailwind CDN if styling needed.`
+        }, {
+          role: 'user',
+          content: `Project prompt: ${prompt}\n\nWrite complete code for: ${filePath}`
+        }],
+        temperature: 0.1,
+        max_tokens: 4000
+      });
       
-      let code = `// ${filePath}\n// ${fileDescription}\n\n`;
-      
-      if (filePath === 'index.html') {
-        code += `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generated App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body class="bg-gray-900 text-white">
-  <div id="root" class="p-8">
-    <h1 class="text-3xl font-bold mb-4">App Generated by Forge</h1>
-    <p>Prompt: ${prompt}</p>
-  </div>
-  <script src="script.js"></script>
-</body>
-</html>`;
-      } else if (filePath === 'App.jsx') {
-        code += `function App() {
-  const [count, setCount] = React.useState(0);
-  return (
-    <div className="p-8 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">React App</h1>
-      <p className="mb-4">Prompt: ${prompt}</p>
-      <button 
-        onClick={() => setCount(count + 1)}
-        className="bg-blue-600 px-4 py-2 rounded"
-      >
-        Count: {count}
-      </button>
-    </div>
-  );
-}`;
-      } else if (filePath.includes('.css')) {
-        code += `body { 
-  font-family: -apple-system, sans-serif; 
-  background: #0a0a0a; 
-  color: #fff; 
-  margin: 0;
-  padding: 20px;
-}`;
-      } else if (filePath.includes('.js')) {
-        code += `console.log('App initialized: ${prompt}');
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM ready');
-});`;
-      }
+      let code = completion.choices[0].message.content;
+      // Strip markdown fences if AI adds them
+      code = code.replace(/```[\w]*\n/g, '').replace(/```$/g, '').trim();
       
       return res.json({ success: true, code });
     }
     
     res.status(400).json({ error: 'Invalid action' });
   } catch (err) {
+    console.error('AI Error:', err);
     res.status(500).json({ error: 'Generation failed: ' + err.message });
   }
-}
+        }

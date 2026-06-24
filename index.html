@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +10,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #0a0a0a; color: #fff; 
     }
-    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
     .header { 
       display: flex; justify-content: space-between; align-items: center;
       padding: 16px 0; border-bottom: 1px solid #222; margin-bottom: 24px;
@@ -20,14 +20,19 @@
       font-size: 13px; padding: 6px 12px; background: #1a1a1a; 
       border-radius: 20px; border: 1px solid #333;
     }
-    .build-box { 
-      background: #111; border: 1px solid #333; border-radius: 12px; 
-      padding: 20px; margin-bottom: 20px;
+    .main-grid {
+      display: grid; grid-template-columns: 350px 1fr 1fr; gap: 20px; height: calc(100vh - 140px);
     }
+    @media (max-width: 1200px) {.main-grid { grid-template-columns: 1fr; height: auto; } }
+    .panel { 
+      background: #111; border: 1px solid #333; border-radius: 12px; 
+      padding: 20px; display: flex; flex-direction: column;
+    }
+    .panel-title { font-size: 14px; color: #888; margin-bottom: 12px; font-weight: 600; }
     #promptInput { 
-      width: 100%; min-height: 120px; background: #0a0a0a; 
+      width: 100%; flex: 1; background: #0a0a0a; 
       border: 1px solid #333; border-radius: 8px; color: #fff;
-      padding: 12px; font-size: 15px; resize: vertical;
+      padding: 12px; font-size: 14px; resize: none;
     }
     #promptInput:focus { outline: none; border-color: #4f46e5; }
     .build-btn { 
@@ -36,15 +41,45 @@
       cursor: pointer; margin-top: 12px;
     }
     .build-btn:disabled { background: #333; cursor: not-allowed; }
-    .output { 
+    .file-list { 
+      flex: 1; overflow-y: auto; background: #0a0a0a; 
+      border: 1px solid #222; border-radius: 8px; padding: 8px;
+    }
+    .file-item { 
+      padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .file-item:hover { background: #1a1a1a; }
+    .file-item.active { background: #4f46e5; color: #fff; }
+    .file-status { font-size: 10px; opacity: 0.6; }
+    .status-building { color: #f59e0b; }
+    .status-done { color: #10b981; }
+    .status-error { color: #ef4444; }
+    .status-pending { color: #666; }
+    .code-editor { 
+      flex: 1; background: #0d0d0d; border: 1px solid #222; border-radius: 8px;
+      padding: 16px; overflow: auto; font-family: 'Courier New', monospace; 
+      font-size: 13px; color: #e5e5e5; white-space: pre;
+    }
+    #previewFrame { 
+      width: 100%; flex: 1; border: 1px solid #222; border-radius: 8px; 
+      background: #fff;
+    }
+    .plan-box {
       background: #0d0d0d; border: 1px solid #222; border-radius: 8px;
-      padding: 16px; min-height: 200px; white-space: pre-wrap;
-      font-family: 'Courier New', monospace; font-size: 13px;
+      padding: 12px; margin-bottom: 12px; font-size: 12px; color: #aaa;
+      max-height: 200px; overflow-y: auto;
+    }
+    .progress-bar {
+      width: 100%; height: 4px; background: #222; border-radius: 2px; margin: 8px 0;
+    }
+    .progress-fill {
+      height: 100%; background: #4f46e5; border-radius: 2px; transition: width 0.3s;
     }
     .settings-btn {
       position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px;
       background: #4f46e5; border-radius: 50%; border: none; cursor: pointer;
-      font-size: 24px; color: #fff;
+      font-size: 24px; color: #fff; z-index: 100;
     }
     .modal { 
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
@@ -55,8 +90,15 @@
       padding: 24px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto;
     }
     .close-modal { 
-      float: right; font-size: 28px; color: #666; cursor: pointer;
-      line-height: 20px;
+      float: right; font-size: 28px; color: #666; cursor: pointer; line-height: 20px;
+    }
+    .input-field {
+      width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 6px;
+      padding: 10px; color: #fff; margin-top: 6px; font-size: 14px;
+    }
+    .save-btn {
+      width: 100%; background: #4f46e5; color: #fff; padding: 10px;
+      border: none; border-radius: 6px; margin-top: 10px; cursor: pointer;
     }
   </style>
 </head>
@@ -67,12 +109,35 @@
       <div id="creditDisplay">Loading...</div>
     </div>
 
-    <div class="build-box">
-      <textarea id="promptInput" placeholder="Describe the app you want to build..."></textarea>
-      <button id="buildBtn" class="build-btn" onclick="handleBuild()">Build with Forge</button>
-    </div>
+    <div class="main-grid">
+      <!-- Left: Prompt + Plan -->
+      <div class="panel">
+        <div class="panel-title">1. Describe Your App</div>
+        <textarea id="promptInput" placeholder="e.g. Build a React todo app with localStorage and dark mode"></textarea>
+        <button id="buildBtn" class="build-btn" onclick="startBuild()">Generate Project</button>
+        
+        <div class="panel-title" style="margin-top:20px">Build Plan</div>
+        <div id="buildPlan" class="plan-box">Waiting for prompt...</div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+        <div id="buildStatus" style="font-size:11px;color:#666;text-align:center">Idle</div>
+      </div>
 
-    <div class="output" id="outputBox">Your generated code will appear here...</div>
+      <!-- Middle: Files + Code -->
+      <div class="panel">
+        <div class="panel-title">2. Files</div>
+        <div id="fileList" class="file-list">
+          <div style="color:#666;text-align:center;padding:20px;font-size:12px" data-empty>No files yet</div>
+        </div>
+        <div class="panel-title" style="margin-top:12px">Code</div>
+        <div id="codeEditor" class="code-editor">// Select a file to view code</div>
+      </div>
+
+      <!-- Right: Preview -->
+      <div class="panel">
+        <div class="panel-title">3. Live Preview</div>
+        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
   </div>
 
   <button class="settings-btn" onclick="openSettings()">⚙️</button>
@@ -111,12 +176,22 @@
       
       <div style="margin-bottom:20px">
         <label style="font-size:13px;color:#888">Your Email</label>
-        <input id="userEmail" type="email" placeholder="your@email.com"
-               style="width:100%;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:10px;color:#fff;margin-top:6px">
-        <button onclick="saveEmail()" 
-                style="width:100%;background:#4f46e5;color:#fff;padding:10px;border:none;border-radius:6px;margin-top:10px;cursor:pointer">
-          Save Email
-        </button>
+        <input id="userEmail" type="email" placeholder="your@email.com" class="input-field">
+        <button onclick="saveEmail()" class="save-btn">Save Email</button>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="font-size:13px;color:#888">Bring Your Own Key - Optional</label>
+        <select id="byokProvider" class="input-field">
+          <option value="">Use Forge Credits</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic Claude</option>
+          <option value="groq">Groq</option>
+          <option value="gemini">Google Gemini</option>
+        </select>
+        <input id="byokKey" type="password" placeholder="sk-... or your API key" class="input-field">
+        <button onclick="saveBYOK()" class="save-btn">Save API Key</button>
+        <p style="font-size:11px;color:#666;margin-top:6px">BYOK = Unlimited builds. We don’t store your key.</p>
       </div>
 
       <hr style="margin:20px 0;border:1px solid #333">

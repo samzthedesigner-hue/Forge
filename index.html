@@ -3,231 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forge - AI App Builder</title>
+  <title>Forge - AI Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0a0a0a; color: #fff; 
-    }
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    .header { 
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 0; border-bottom: 1px solid #222; margin-bottom: 24px;
-    }
-    .logo { font-size: 24px; font-weight: bold; color: #4f46e5; }
-    #creditDisplay { 
-      font-size: 13px; padding: 6px 12px; background: #1a1a1a; 
-      border-radius: 20px; border: 1px solid #333;
-    }
-    .main-grid {
-      display: grid; grid-template-columns: 350px 1fr 1fr; gap: 20px; height: calc(100vh - 140px);
-    }
-    @media (max-width: 1200px) {.main-grid { grid-template-columns: 1fr; height: auto; } }
-    .panel { 
-      background: #111; border: 1px solid #333; border-radius: 12px; 
-      padding: 20px; display: flex; flex-direction: column;
-    }
-    .panel-title { font-size: 14px; color: #888; margin-bottom: 12px; font-weight: 600; }
-    #promptInput { 
-      width: 100%; flex: 1; background: #0a0a0a; 
-      border: 1px solid #333; border-radius: 8px; color: #fff;
-      padding: 12px; font-size: 14px; resize: none;
-    }
-    #promptInput:focus { outline: none; border-color: #4f46e5; }
-    .build-btn { 
-      width: 100%; background: #4f46e5; color: #fff; padding: 14px;
-      border: none; border-radius: 8px; font-size: 15px; font-weight: bold;
-      cursor: pointer; margin-top: 12px;
-    }
-    .build-btn:disabled { background: #333; cursor: not-allowed; }
-    .file-list { 
-      flex: 1; overflow-y: auto; background: #0a0a0a; 
-      border: 1px solid #222; border-radius: 8px; padding: 8px;
-    }
-    .file-item { 
-      padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .file-item:hover { background: #1a1a1a; }
-    .file-item.active { background: #4f46e5; color: #fff; }
-    .file-status { font-size: 10px; opacity: 0.6; }
-    .status-building { color: #f59e0b; }
-    .status-done { color: #10b981; }
-    .status-error { color: #ef4444; }
-    .status-pending { color: #666; }
-    .code-editor { 
-      flex: 1; background: #0d0d0d; border: 1px solid #222; border-radius: 8px;
-      padding: 16px; overflow: auto; font-family: 'Courier New', monospace; 
-      font-size: 13px; color: #e5e5e5; white-space: pre;
-    }
-    #previewFrame { 
-      width: 100%; flex: 1; border: 1px solid #222; border-radius: 8px; 
-      background: #fff;
-    }
-    .plan-box {
-      background: #0d0d0d; border: 1px solid #222; border-radius: 8px;
-      padding: 12px; margin-bottom: 12px; font-size: 12px; color: #aaa;
-      max-height: 200px; overflow-y: auto;
-    }
-    .progress-bar {
-      width: 100%; height: 4px; background: #222; border-radius: 2px; margin: 8px 0;
-    }
-    .progress-fill {
-      height: 100%; background: #4f46e5; border-radius: 2px; transition: width 0.3s;
-    }
-    .settings-btn {
-      position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px;
-      background: #4f46e5; border-radius: 50%; border: none; cursor: pointer;
-      font-size: 24px; color: #fff; z-index: 100;
-    }
-    .modal { 
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-      z-index: 9999; align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-content { 
-      background: #0d0d0d; border: 1px solid #333; border-radius: 12px;
-      padding: 24px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto;
-    }
-    .close-modal { 
-      float: right; font-size: 28px; color: #666; cursor: pointer; line-height: 20px;
-    }
-    .input-field {
-      width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 6px;
-      padding: 10px; color: #fff; margin-top: 6px; font-size: 14px;
-    }
-    .save-btn {
-      width: 100%; background: #4f46e5; color: #fff; padding: 10px;
-      border: none; border-radius: 6px; margin-top: 10px; cursor: pointer;
-    }
+    body { background: #0a0a0a; color: #e5e5e5; font-family: -apple-system, sans-serif; }
+ .file-item { padding: 6px 10px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; }
+ .file-item:hover { background: #1a1a1a; }
+ .file-item.active { background: #2563eb; }
+ .file-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+ .status-pending { background: #374151; color: #9ca3af; }
+ .status-building { background: #1e40af; color: #60a5fa; }
+ .status-done { background: #166534; color: #4ade80; }
+ .status-error { background: #991b1b; color: #f87171; }
+ .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 50; align-items: center; justify-content: center; }
+ .modal-content { background: #1a1a1a; padding: 24px; border-radius: 8px; width: 90%; max-width: 500px; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">Forge</div>
-      <div id="creditDisplay">Loading...</div>
+<body class="h-screen flex flex-col">
+  <div class="flex justify-between items-center p-3 border-b border-gray-800">
+    <h1 class="font-bold text-xl">Forge</h1>
+    <div class="flex items-center gap-4">
+      <div id="creditDisplay" class="text-sm text-gray-400">Loading...</div>
+      <button id="settingsBtn" class="text-gray-400 hover:text-white">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106a1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106a1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
+      </button>
     </div>
+  </div>
 
-    <div class="main-grid">
-      <!-- Left: Prompt + Plan -->
-      <div class="panel">
-        <div class="panel-title">1. Describe Your App</div>
-        <textarea id="promptInput" placeholder="e.g. Build a React todo app with localStorage and dark mode"></textarea>
-        <button id="buildBtn" class="build-btn" onclick="startBuild()">Generate Project</button>
-        
-        <div class="panel-title" style="margin-top:20px">Build Plan</div>
-        <div id="buildPlan" class="plan-box">Waiting for prompt...</div>
-        <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
-        <div id="buildStatus" style="font-size:11px;color:#666;text-align:center">Idle</div>
+  <div class="flex-1 flex overflow-hidden">
+    <div class="w-80 border-r border-gray-800 flex flex-col">
+      <div class="p-3 border-b border-gray-800">
+        <textarea id="promptInput" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm resize-none" rows="3" placeholder="Build a calculator app..."></textarea>
+        <button id="sendBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">Generate Project</button>
       </div>
-
-      <!-- Middle: Files + Code -->
-      <div class="panel">
-        <div class="panel-title">2. Files</div>
-        <div id="fileList" class="file-list">
-          <div style="color:#666;text-align:center;padding:20px;font-size:12px" data-empty>No files yet</div>
+      
+      <div class="p-3 border-b border-gray-800">
+        <div class="text-xs font-bold mb-2">BUILD PLAN</div>
+        <div id="buildPlan" class="text-xs text-gray-400">Waiting for prompt...</div>
+      </div>
+      
+      <div class="p-3 border-b border-gray-800">
+        <div class="flex justify-between items-center mb-2">
+          <div class="text-xs font-bold">PROGRESS</div>
+          <div id="buildStatusText" class="text-xs text-gray-500">Idle</div>
         </div>
-        <div class="panel-title" style="margin-top:12px">Code</div>
-        <div id="codeEditor" class="code-editor">// Select a file to view code</div>
+        <div class="w-full bg-gray-800 rounded-full h-1.5">
+          <div id="buildBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
       </div>
-
-      <!-- Right: Preview -->
-      <div class="panel">
-        <div class="panel-title">3. Live Preview</div>
-        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+      
+      <div class="flex-1 overflow-y-auto">
+        <div class="p-3">
+          <div class="text-xs font-bold mb-2">FILES</div>
+          <div id="fileList" class="text-xs">
+            <div class="text-gray-600 text-center py-4">No files yet</div>
+          </div>
+        </div>
       </div>
+    </div>
+    
+    <div class="flex-1 flex flex-col">
+      <div class="p-2 border-b border-gray-800 text-xs font-bold">CODE</div>
+      <pre id="output" class="flex-1 p-3 overflow-auto text-xs bg-gray-950">// Select a file to view code</pre>
+    </div>
+    
+    <div class="w-96 border-l border-gray-800 flex flex-col">
+      <div class="p-2 border-b border-gray-800 text-xs font-bold">LIVE PREVIEW</div>
+      <iframe id="previewFrame" class="flex-1 bg-white"></iframe>
     </div>
   </div>
 
-  <button class="settings-btn" onclick="openSettings()">⚙️</button>
-
-  <!-- Upgrade Modal -->
-  <div id="upgradeModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeUpgradeModal()">&times;</span>
-      <h3 style="margin:0 0 8px;font-size:18px">More Power Needed</h3>
-      <p id="upgradeMessage" style="color:#aaa;font-size:13px;margin:0 0 20px"></p>
-      
-      <button onclick="window.open('https://selar.com/w4r1231121')" 
-              style="width:100%;background:#4f46e5;color:#fff;padding:14px;border:none;border-radius:6px;margin-bottom:10px;cursor:pointer">
-        <div style="font-weight:bold">Forge Pro — ₦7,500/mo</div>
-        <div style="font-size:11px;opacity:0.8">5,000 credits/month</div>
-      </button>
-      
-      <button onclick="window.open('https://selar.com/es97887gu9')" 
-              style="width:100%;background:#7c3aed;color:#fff;padding:14px;border:none;border-radius:6px;margin-bottom:10px;cursor:pointer">
-        <div style="font-weight:bold">Forge Pro Max — ₦22,500/mo</div>
-        <div style="font-size:11px;opacity:0.8">Unlimited credits</div>
-      </button>
-      
-      <button onclick="continueOnFree()" 
-              style="width:100%;background:#1a1a1a;color:#888;padding:12px;border:1px solid #333;border-radius:6px;cursor:pointer;font-size:12px">
-        Continue on Free Tier
-      </button>
+  <div id="welcomeScreen" class="fixed inset-0 bg-black z-40 flex items-center justify-center">
+    <div class="text-center">
+      <h2 class="text-3xl font-bold mb-4">Welcome to Forge</h2>
+      <p class="text-gray-400 mb-6">Build apps with AI. Set your email to start.</p>
+      <button id="welcomeBtn" class="bg-blue-600 px-6 py-2 rounded">Get Started</button>
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div id="settingsModal" class="modal">
     <div class="modal-content">
-      <span class="close-modal" onclick="closeSettings()">&times;</span>
-      <h3 style="margin:0 0 20px">Settings</h3>
-      
-      <div style="margin-bottom:20px">
-        <label style="font-size:13px;color:#888">Your Email</label>
-        <input id="userEmail" type="email" placeholder="your@email.com" class="input-field">
-        <button onclick="saveEmail()" class="save-btn">Save Email</button>
-      </div>
+      <h2 class="text-lg font-bold mb-4">Settings</h2>
+      <label class="text-sm text-gray-400">Your Email</label>
+      <input id="userEmail" type="email" class="w-full bg-gray-900 border border-gray-700 rounded p-2 mt-1 mb-4 text-sm" placeholder="you@email.com">
+      <button id="saveEmailBtn" class="w-full bg-blue-600 py-2 rounded text-sm mb-6">Save Email</button>
+      <label class="text-sm text-gray-400">BYOK - Bring Your Own Key</label>
+      <select id="byokProvider" class="w-full bg-gray-900 border border-gray-700 rounded p-2 mt-1 mb-2 text-sm">
+        <option value="">None - Use Forge credits</option>
+        <option value="groq">Groq - Fastest</option>
+        <option value="openai">OpenAI</option>
+        <option value="openrouter">OpenRouter</option>
+      </select>
+      <input id="byokKey" type="password" class="w-full bg-gray-900 border border-gray-700 rounded p-2 mb-4 text-sm" placeholder="sk-... or gsk_...">
+      <button id="saveBYOKBtn" class="w-full bg-gray-700 py-2 rounded text-sm mb-4">Save API Key</button>
+      <button id="closeSettingsBtn" class="w-full text-gray-500 text-sm">Close</button>
+    </div>
+  </div>
 
-      <div style="margin-bottom:20px">
-        <label style="font-size:13px;color:#888">Bring Your Own Key - Optional</label>
-        <select id="byokProvider" class="input-field">
-          <option value="">Use Forge Credits</option>
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic Claude</option>
-          <option value="groq">Groq</option>
-          <option value="gemini">Google Gemini</option>
-        </select>
-        <input id="byokKey" type="password" placeholder="sk-... or your API key" class="input-field">
-        <button onclick="saveBYOK()" class="save-btn">Save API Key</button>
-        <p style="font-size:11px;color:#666;margin-top:6px">BYOK = Unlimited builds. We don’t store your key.</p>
-      </div>
-
-      <hr style="margin:20px 0;border:1px solid #333">
-      <p style="font-size:14px;color:#fff;margin-bottom:15px;font-weight:bold">Upgrade to Forge Pro</p>
-
-      <p style="font-size:12px;color:#888;margin:10px 0 8px">Pay with Card - Instant Activation</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-        <button onclick="window.open('https://selar.com/w4r1231121')" 
-                style="background:#4f46e5;color:#fff;padding:14px;border:none;border-radius:6px;cursor:pointer">
-          <div style="font-size:14px;font-weight:bold">Pro</div>
-          <div style="font-size:18px;margin:4px 0">₦7,500/mo</div>
-          <div style="font-size:11px;opacity:0.8">5,000 credits</div>
-        </button>
-        <button onclick="window.open('https://selar.com/es97887gu9')" 
-                style="background:#7c3aed;color:#fff;padding:14px;border:none;border-radius:6px;cursor:pointer">
-          <div style="font-size:14px;font-weight:bold">Pro Max</div>
-          <div style="font-size:18px;margin:4px 0">₦22,500/mo</div>
-          <div style="font-size:11px;opacity:0.8">Unlimited</div>
-        </button>
-      </div>
-
-      <p style="font-size:12px;color:#888;margin:10px 0 8px">Bank Transfer - Activate via WhatsApp</p>
-      <div style="background:#1a1a1a;padding:14px;border-radius:6px;border:1px solid #333">
-        <p style="font-size:12px;margin:0 0 8px;color:#ccc">Send payment to:</p>
-        <p style="font-size:13px;margin:2px 0;color:#fff"><b>Account Name:</b> Samuel Oluwasogo Obadimeji</p>
-        <p style="font-size:13px;margin:2px 0;color:#fff"><b>Account No:</b> 5672422722</p>
-        <p style="font-size:13px;margin:2px 0;color:#fff"><b>Bank:</b> Moniepoint MFB</p>
-        <p style="font-size:11px;margin:10px 0 0;color:#888">Pro: ₦7,500 | Pro Max: ₦22,500</p>
-        
-        <a href="https://wa.me/2348165869126?text=Hi%20Texchcorp.%20I%20paid%20for%20Forge.%20My%20signup%20email:%20" 
-           target="_blank"
-           style="display:block;background:#25D366;color:#fff;text-align:center;padding:12px;margin-top:12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:bold">
-          📱 Send Receipt on WhatsApp
-        </a>
-        <p style="font-size:10px;margin:8px 0 0;color:#666;text-align:center">Activation within 5 mins after confirmation</p>
-      </div>
+  <div id="upgradeModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-lg font-bold mb-4">Out of Credits</h2>
+      <p id="upgradeMessage" class="text-sm text-gray-400 mb-6"></p>
+      <button id="continueFreeBtn" class="w-full bg-gray-700 py-2 rounded text-sm mb-2">Continue with Free</button>
+      <button id="upgradeSettingsBtn" class="w-full bg-blue-600 py-2 rounded text-sm">Add API Key for Unlimited</button>
     </div>
   </div>
 

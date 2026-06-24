@@ -1,282 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forge - AI Web App Builder</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #f3f4f6; }
-       .code-font { font-family: 'JetBrains Mono', monospace; }
-       .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge - AI Web App Builder</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap');
+body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
+.code-font{font-family:'JetBrains Mono',monospace}
+.glass-panel{background:rgba(17,24,39,.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08)}
+</style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col relative">
+<div id="welcome-screen" class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
+<div class="text-center space-y-6">
+<h1 class="text-4xl font-bold text-white">Welcome to Forge</h1>
+<p class="text-gray-400 text-lg">Build apps with AI. Set your username to start.</p>
+<button id="get-started-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all cursor-pointer">Get Started</button>
+</div></div>
 
-    <!-- Welcome Screen - Matches Image 3 Exactly -->
-    <div id="welcome-screen" class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
-        <div class="text-center space-y-6">
-            <h1 class="text-4xl font-bold text-white">Welcome to Forge</h1>
-            <p class="text-gray-400 text-lg">Build apps with AI. Set your username to start.</p>
-            <button id="get-started-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all cursor-pointer">
-                Get Started
-            </button>
-        </div>
-    </div>
+<div id="app-layout" class="flex-1 flex flex-col h-full hidden">
+<header class="h-16 border-b border-gray-800 bg-gray-950/50 backdrop-blur px-6 flex items-center justify-between z-10">
+<div class="flex items-center space-x-3">
+<div class="text-blue-500 text-xl"><i class="fas fa-cubes-stacked"></i></div>
+<span class="font-bold text-lg tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">FORGE</span>
+<span class="px-2 py-0.5 text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md font-medium">v1.1</span>
+</div>
+<div class="flex items-center space-x-4">
+<div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-1.5 flex items-center space-x-3 text-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span id="credit-tier-label" class="text-xs font-semibold uppercase tracking-wider text-gray-400">FREE</span>
+<div class="h-4 w-px bg-gray-800"></div>
+<span class="text-gray-300 font-medium"><span id="credit-balance-display">0</span> Credits</span>
+<button id="upgrade-trigger-btn" class="text-xs text-blue-400 hover:text-blue-300 font-medium ml-1">Upgrade</button>
+</div>
+<button id="share-project-btn" class="hidden px-3 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl text-xs"><i class="fas fa-share"></i> Share</button>
+<button id="settings-trigger-btn" class="p-2.5 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl"><i class="fas fa-gear text-lg"></i></button>
+</div></header>
 
-    <!-- Main App Layout -->
-    <div id="app-layout" class="flex-1 flex flex-col h-full hidden">
-        <header class="h-16 border-b border-gray-800 bg-gray-950/50 backdrop-blur px-6 flex items-center justify-between z-10">
-            <div class="flex items-center space-x-3">
-                <div class="text-blue-500 text-xl"><i class="fas fa-cubes-stacked"></i></div>
-                <span class="font-bold text-lg tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">FORGE</span>
-                <span class="px-2 py-0.5 text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md font-medium">v1.1</span>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div id="credit-status-pill" class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-1.5 flex items-center space-x-3 text-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="credit-tier-label" class="text-xs font-semibold uppercase tracking-wider text-gray-400">FREE</span>
-                    <div class="h-4 w-px bg-gray-800"></div>
-                    <span class="text-gray-300 font-medium"><span id="credit-balance-display">0</span> Credits</span>
-                    <button id="upgrade-trigger-btn" class="text-xs text-blue-400 hover:text-blue-300 font-medium ml-1 transition-colors">Upgrade</button>
-                </div>
-                <button id="settings-trigger-btn" class="p-2.5 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl transition-all">
-                    <i class="fas fa-gear text-lg"></i>
-                </button>
-            </div>
-        </header>
+<section class="border-b border-gray-800 bg-gray-900/40 p-4 px-6 flex flex-col md:flex-row items-center gap-4">
+<div class="w-full md:flex-1 relative">
+<div class="absolute inset-y-0 left-4 flex items-center text-gray-500"><i class="fas fa-wand-magic-sparkles"></i></div>
+<input id="prompt-input-field" type="text" placeholder="Describe the application you want to forge today..." class="w-full pl-12 pr-4 py-3 bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl text-white placeholder-gray-500 outline-none">
+</div>
+<button id="generate-action-btn" class="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl flex items-center justify-center space-x-2 shadow-md shadow-blue-600/10 cursor-pointer"><span>Forge App</span><i class="fas fa-bolt"></i></button>
+</section>
 
-        <section class="border-b border-gray-800 bg-gray-900/40 p-4 px-6 flex flex-col md:flex-row items-center gap-4">
-            <div class="w-full md:flex-1 relative">
-                <div class="absolute inset-y-0 left-4 flex items-center text-gray-500">
-                    <i class="fas fa-wand-magic-sparkles"></i>
-                </div>
-                <input id="prompt-input-field" type="text" placeholder="Describe the application you want to forge today..." class="w-full pl-12 pr-4 py-3 bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl text-white placeholder-gray-500 outline-none transition-all">
-            </div>
-            <button id="generate-action-btn" class="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md shadow-blue-600/10 cursor-pointer">
-                <span>Forge App</span>
-                <i class="fas fa-bolt"></i>
-            </button>
-        </section>
+<div id="progress-container-bar" class="hidden border-b border-gray-800 bg-gray-950/80 px-6 py-3 space-y-2">
+<div class="flex items-center justify-between text-xs font-medium">
+<span id="progress-status-message" class="text-blue-400 flex items-center gap-2"><i class="fas fa-circle-notch animate-spin"></i> Spawning parallel builders...</span>
+<span id="progress-percentage-metric" class="text-gray-400">0%</span>
+</div>
+<div class="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
+<div id="progress-fill-indicator" class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300" style="width:0%"></div>
+</div></div>
 
-        <div id="progress-container-bar" class="hidden border-b border-gray-800 bg-gray-950/80 px-6 py-3 space-y-2">
-            <div class="flex items-center justify-between text-xs font-medium">
-                <span id="progress-status-message" class="text-blue-400 flex items-center gap-2">
-                    <i class="fas fa-circle-notch animate-spin"></i> Spawning parallel builders...
-                </span>
-                <span id="progress-percentage-metric" class="text-gray-400">0%</span>
-            </div>
-            <div class="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
-                <div id="progress-fill-indicator" class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300" style="width: 0%"></div>
-            </div>
-        </div>
+<main class="flex-1 flex overflow-hidden">
+<aside class="w-64 border-r border-gray-800 bg-gray-950/30 flex flex-col">
+<div class="p-4 border-b border-gray-800 flex items-center justify-between">
+<span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Workspace Files</span>
+<i class="fas fa-folder-tree text-gray-500 text-xs"></i>
+</div>
+<div id="file-system-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+<div class="text-xs text-gray-500 text-center py-8 italic">No project files compiled yet.</div>
+</div></aside>
+<section class="flex-1 flex flex-col md:flex-row overflow-hidden">
+<div class="flex-1 border-r border-gray-800 flex flex-col bg-gray-950/10">
+<div class="h-11 border-b border-gray-800 bg-gray-950/60 px-4 flex items-center justify-between">
+<div class="flex items-center space-x-2 text-xs font-medium text-gray-400"><i class="fas fa-code text-blue-400"></i><span id="active-file-title-indicator">index.html</span></div>
+<span class="text-xs code-font text-gray-600">READ-ONLY COMPILED VIEW</span>
+</div>
+<div class="flex-1 overflow-auto p-4 bg-gray-950/50 code-font text-sm leading-relaxed text-blue-100 whitespace-pre-wrap selection:bg-blue-500/20" id="code-canvas-output"></div>
+</div>
+<div class="flex-1 flex flex-col bg-white">
+<div class="h-11 border-b border-gray-200 bg-gray-100 px-4 flex items-center justify-between text-gray-800">
+<div class="flex items-center space-x-2 text-xs font-medium text-gray-600"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live App Sandbox View</span></div>
+<button id="sandbox-refresh-trigger" class="p-1 hover:bg-gray-200 rounded text-gray-500"><i class="fas fa-rotate-right text-xs"></i></button>
+</div>
+<iframe id="live-render-sandbox" class="flex-1 w-full h-full border-none bg-white" sandbox="allow-scripts allow-modals allow-popups"></iframe>
+</div></section></main></div>
 
-        <main class="flex-1 flex overflow-hidden">
-            <aside class="w-64 border-r border-gray-800 bg-gray-950/30 flex flex-col">
-                <div class="p-4 border-b border-gray-800 flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Workspace Files</span>
-                    <i class="fas fa-folder-tree text-gray-500 text-xs"></i>
-                </div>
-                <div id="file-system-list" class="flex-1 overflow-y-auto p-2 space-y-1">
-                    <div class="text-xs text-gray-500 text-center py-8 italic">No project files compiled yet.</div>
-                </div>
-            </aside>
-            <section class="flex-1 flex flex-col md:flex-row overflow-hidden">
-                <div class="flex-1 border-r border-gray-800 flex flex-col bg-gray-950/10">
-                    <div class="h-11 border-b border-gray-800 bg-gray-950/60 px-4 flex items-center justify-between">
-                        <div class="flex items-center space-x-2 text-xs font-medium text-gray-400">
-                            <i class="fas fa-code text-blue-400"></i>
-                            <span id="active-file-title-indicator">index.html</span>
-                        </div>
-                        <span class="text-xs code-font text-gray-600">READ-ONLY COMPILED VIEW</span>
-                    </div>
-                    <div class="flex-1 overflow-auto p-4 bg-gray-950/50 code-font text-sm leading-relaxed text-blue-100 whitespace-pre-wrap selection:bg-blue-500/20" id="code-canvas-output"></div>
-                </div>
-                <div class="flex-1 flex flex-col bg-white">
-                    <div class="h-11 border-b border-gray-200 bg-gray-100 px-4 flex items-center justify-between text-gray-800">
-                        <div class="flex items-center space-x-2 text-xs font-medium text-gray-600">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>Live App Sandbox View</span>
-                        </div>
-                        <div class="flex items-center space-x-1.5">
-                            <button id="sandbox-refresh-trigger" class="p-1 hover:bg-gray-200 rounded text-gray-500 transition-all"><i class="fas fa-rotate-right text-xs"></i></button>
-                        </div>
-                    </div>
-                    <iframe id="live-render-sandbox" class="flex-1 w-full h-full border-none bg-white" sandbox="allow-scripts allow-modals allow-popups"></iframe>
-                </div>
-            </section>
-        </main>
-    </div>
+<div id="settings-configuration-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
+<div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
+<div class="flex items-center space-x-2.5"><i class="fas fa-sliders text-blue-500"></i><h3 class="font-semibold text-lg text-white">System Environment Configuration</h3></div>
+<button id="close-settings-modal-btn" class="text-gray-400 hover:text-white p-1 hidden"><i class="fas fa-xmark text-lg"></i></button>
+</div>
+<div class="p-6 space-y-5 bg-gray-950/40">
+<div class="space-y-2">
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Account Identity Handle (Username or WhatsApp)</label>
+<div class="relative"><span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-user-gear"></i></span>
+<input id="identity-handle-input" type="text" placeholder="e.g., +2348012345678 or DevSam" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white text-sm"></div>
+</div>
+<div class="h-px bg-gray-800/60 my-2"></div>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Bring Your Own Key (BYOK)</label>
+<span class="px-2 py-0.5 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded font-medium">OPTIONAL</span>
+</div>
+<div class="relative"><span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-key"></i></span>
+<input id="byok-secret-input" type="password" placeholder="gsk_..." class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white font-mono text-xs tracking-wider"></div>
+</div></div>
+<div class="px-6 py-4 bg-gray-950 border-t border-gray-800 flex justify-end">
+<button id="save-configuration-action" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl text-sm shadow-md shadow-blue-600/10 cursor-pointer">Save Environment Parameters</button>
+</div></div></div>
 
-    <!-- Settings Modal -->
-    <div id="settings-configuration-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl transform transition-all border border-gray-800">
-            <div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                    <i class="fas fa-sliders text-blue-500"></i>
-                    <h3 class="font-semibold text-lg text-white">System Environment Configuration</h3>
-                </div>
-                <button id="close-settings-modal-btn" class="text-gray-400 hover:text-white transition-colors p-1 hidden"><i class="fas fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-6 space-y-5 bg-gray-950/40">
-                <div class="space-y-2">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Account Identity Handle (Username or WhatsApp)</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-user-gear"></i></span>
-                        <input id="identity-handle-input" type="text" placeholder="e.g., +2348012345678 or DevSam" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white transition-all text-sm">
-                    </div>
-                </div>
-                <div class="h-px bg-gray-800/60 my-2"></div>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Bring Your Own Key (BYOK)</label>
-                        <span class="px-2 py-0.5 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded font-medium">OPTIONAL</span>
-                    </div>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-key"></i></span>
-                        <input id="byok-secret-input" type="password" placeholder="gsk_..." class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white font-mono text-xs transition-all tracking-wider">
-                    </div>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-gray-950 border-t border-gray-800 flex justify-end">
-                <button id="save-configuration-action" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl text-sm transition-all shadow-md shadow-blue-600/10 cursor-pointer">Save Environment Parameters</button>
-            </div>
-        </div>
-    </div>
+<div id="upgrade-tier-system-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="glass-panel w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
+<div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
+<div class="flex items-center space-x-2.5"><i class="fas fa-crown text-amber-400"></i><h3 class="font-semibold text-lg text-white">Upgrade Resource Plan Matrix</h3></div>
+<button id="close-upgrade-modal-btn" class="text-gray-400 hover:text-white p-1"><i class="fas fa-xmark text-lg"></i></button>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-950/40">
+<div class="border border-gray-800 bg-gray-950/60 p-4 rounded-xl flex flex-col justify-between">
+<div><h4 class="font-bold text-white text-base">Standard Community Tier</h4>
+<p class="text-xs text-gray-400 mt-1">Basic exploratory capabilities for general projects.</p>
+<div class="my-4 text-2xl font-extrabold text-white">Free <span class="text-xs text-gray-500 font-normal">/ perpetually</span></div>
+<ul class="text-xs space-y-2 text-gray-400">
+<li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> 400 default balance units</li>
+<li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> Base speed streaming lines</li>
+<li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> 50 units flexible grace overdraft</li>
+</ul></div>
+<button class="w-full mt-6 py-2 bg-gray-900 border border-gray-800 text-gray-400 font-medium text-xs rounded-lg cursor-not-allowed" disabled>Current Active Matrix</button>
+</div>
+<div class="border border-blue-500/30 bg-blue-950/10 p-4 rounded-xl flex flex-col justify-between shadow-lg shadow-blue-500/5 relative">
+<div class="absolute top-0 right-0 bg-blue-600 text-[9px] font-bold text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">Recommended</div>
+<div><h4 class="font-bold text-white text-base">Developer Pro Matrix</h4>
+<p class="text-xs text-blue-400 mt-1">High speed enterprise asset build configuration capacity.</p>
+<div class="my-4 text-2xl font-extrabold text-white">Premium <span class="text-xs text-gray-400 font-normal">/ tier system</span></div>
+<ul class="text-xs space-y-2 text-gray-300">
+<li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> 10,000 Premium resource credits</li>
+<li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> Maximum prioritization pipelines</li>
+<li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> Unlimited parallel code generation</li>
+</ul></div>
+<button id="purchase-matrix-action-trigger" class="w-full mt-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg shadow-sm shadow-blue-600/20 cursor-pointer">Provision Access Matrix</button>
+</div></div></div></div>
 
-    <!-- Upgrade Modal -->
-    <div id="upgrade-tier-system-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div class="glass-panel w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl transform transition-all border border-gray-800">
-            <div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                    <i class="fas fa-crown text-amber-400"></i>
-                    <h3 class="font-semibold text-lg text-white">Upgrade Resource Plan Matrix</h3>
-                </div>
-                <button id="close-upgrade-modal-btn" class="text-gray-400 hover:text-white transition-colors p-1"><i class="fas fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-950/40">
-                <div class="border border-gray-800 bg-gray-950/60 p-4 rounded-xl relative overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <h4 class="font-bold text-white text-base">Standard Community Tier</h4>
-                        <p class="text-xs text-gray-400 mt-1">Basic exploratory capabilities for general projects.</p>
-                        <div class="my-4 text-2xl font-extrabold text-white">Free <span class="text-xs text-gray-500 font-normal">/ perpetually</span></div>
-                        <ul class="text-xs space-y-2 text-gray-400">
-                            <li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> 400 default balance units</li>
-                            <li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> Base speed streaming lines</li>
-                            <li class="flex items-center gap-2"><i class="fas fa-check text-blue-500"></i> 50 units flexible grace overdraft</li>
-                        </ul>
-                    </div>
-                    <button class="w-full mt-6 py-2 bg-gray-900 border border-gray-800 text-gray-400 font-medium text-xs rounded-lg cursor-not-allowed" disabled>Current Active Matrix</button>
-                </div>
-                <div class="border border-blue-500/30 bg-blue-950/10 p-4 rounded-xl relative overflow-hidden flex flex-col justify-between shadow-lg shadow-blue-500/5">
-                    <div class="absolute top-0 right-0 bg-blue-600 text-[9px] font-bold text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">Recommended</div>
-                    <div>
-                        <h4 class="font-bold text-white text-base">Developer Pro Matrix</h4>
-                        <p class="text-xs text-blue-400 mt-1">High speed enterprise asset build configuration capacity.</p>
-                        <div class="my-4 text-2xl font-extrabold text-white">Premium <span class="text-xs text-gray-400 font-normal">/ tier system</span></div>
-                        <ul class="text-xs space-y-2 text-gray-300">
-                            <li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> 10,000 Premium resource credits</li>
-                            <li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> Maximum prioritization pipelines</li>
-                            <li class="flex items-center gap-2"><i class="fas fa-circle-check text-blue-400"></i> Unlimited parallel code generation</li>
-                        </ul>
-                    </div>
-                    <button id="purchase-matrix-action-trigger" class="w-full mt-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg transition-colors shadow-sm shadow-blue-600/20 cursor-pointer">Provision Access Matrix</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="share-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
+<div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
+<div class="flex items-center space-x-2.5"><i class="fas fa-share text-blue-500"></i><h3 class="font-semibold text-lg text-white">Share Project</h3></div>
+<button id="close-share-modal-btn" class="text-gray-400 hover:text-white p-1"><i class="fas fa-xmark text-lg"></i></button>
+</div>
+<div class="p-6 space-y-4 bg-gray-950/40">
+<img id="share-preview-img" src="" class="w-full rounded-lg border border-gray-800 hidden">
+<div class="space-y-2">
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Public Link</label>
+<div class="flex gap-2">
+<input id="share-link-input" type="text" readonly class="flex-1 px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white text-sm code-font">
+<button id="copy-share-link-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium">Copy</button>
+</div>
+</div>
+<p class="text-xs text-gray-500">Anyone with this link can view your app. Expires in 30 days.</p>
+</div></div></div>
 
 <script>
 window.addEventListener('load', function() {
-    console.log('Forge loaded');
+console.log('Forge loaded');
+var currentUserId = localStorage.getItem('forge_user_id') || '';
+var currentApiKey = localStorage.getItem('forge_byok_key') || '';
+var currentProject = {files:{name:"index.html",content:'<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex items-center justify-center text-white p-4"><div class="text-center space-y-4 bg-black/30 p-8 rounded-2xl backdrop-blur-md border border-white/10 max-w-md"><h1 class="text-3xl font-extrabold tracking-tight">Active Engine Ready</h1><p class="text-indigo-200 text-sm">Forge has successfully synchronized operational memory pipelines.</p></div></body></html>'}};
+var welcomeScreen = document.getElementById('welcome-screen');
+var getStartedBtn = document.getElementById('get-started-btn');
+var appLayout = document.getElementById('app-layout');
+var settingsModal = document.getElementById('settings-configuration-modal');
+var settingsTriggerBtn = document.getElementById('settings-trigger-btn');
+var closeSettingsModalBtn = document.getElementById('close-settings-modal-btn');
+var identityHandleInput = document.getElementById('identity-handle-input');
+var byokSecretInput = document.getElementById('byok-secret-input');
+var saveConfigurationAction = document.getElementById('save-configuration-action');
+var upgradeModal = document.getElementById('upgrade-tier-system-modal');
+var upgradeTriggerBtn = document.getElementById('upgrade-trigger-btn');
+var closeUpgradeModalBtn = document.getElementById('close-upgrade-modal-btn');
+var purchaseMatrixActionTrigger = document.getElementById('purchase-matrix-action-trigger');
+var creditTierLabel = document.getElementById('credit-tier-label');
+var creditBalanceDisplay = document.getElementById('credit-balance-display');
+var promptInputField = document.getElementById('prompt-input-field');
+var generateActionBtn = document.getElementById('generate-action-btn');
+var progressContainerBar = document.getElementById('progress-container-bar');
+var progressStatusMessage = document.getElementById('progress-status-message');
+var progressPercentageMetric = document.getElementById('progress-percentage-metric');
+var progressFillIndicator = document.getElementById('progress-fill-indicator');
+var fileSystemList = document.getElementById('file-system-list');
+var activeFileTitleIndicator = document.getElementById('active-file-title-indicator');
+var codeCanvasOutput = document.getElementById('code-canvas-output');
+var liveRenderSandbox = document.getElementById('live-render-sandbox');
+var sandboxRefreshTrigger = document.getElementById('sandbox-refresh-trigger');
+var shareProjectBtn = document.getElementById('share-project-btn');
+var shareModal = document.getElementById('share-modal');
+var closeShareModalBtn = document.getElementById('close-share-modal-btn');
+var shareLinkInput = document.getElementById('share-link-input');
+var copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+var sharePreviewImg = document.getElementById('share-preview-img');
 
-    var currentUserId = localStorage.getItem('forge_user_id') || '';
-    var currentApiKey = localStorage.getItem('forge_byok_key') || '';
-    var currentProject = {
-        files: {
-            name: "index.html",
-            content: '<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex items-center justify-center text-white p-4"><div class="text-center space-y-4 bg-black/30 p-8 rounded-2xl backdrop-blur-md border border-white/10 max-w-md"><h1 class="text-3xl font-extrabold tracking-tight">Active Engine Ready</h1><p class="text-indigo-200 text-sm">Forge has successfully synchronized operational memory pipelines.</p></div></body></html>'
-        }
-    };
-
-    var welcomeScreen = document.getElementById('welcome-screen');
-    var getStartedBtn = document.getElementById('get-started-btn');
-    var appLayout = document.getElementById('app-layout');
-    var settingsModal = document.getElementById('settings-configuration-modal');
-    var settingsTriggerBtn = document.getElementById('settings-trigger-btn');
-    var closeSettingsModalBtn = document.getElementById('close-settings-modal-btn');
-    var identityHandleInput = document.getElementById('identity-handle-input');
-    var byokSecretInput = document.getElementById('byok-secret-input');
-    var saveConfigurationAction = document.getElementById('save-configuration-action');
-    var upgradeModal = document.getElementById('upgrade-tier-system-modal');
-    var upgradeTriggerBtn = document.getElementById('upgrade-trigger-btn');
-    var closeUpgradeModalBtn = document.getElementById('close-upgrade-modal-btn');
-    var purchaseMatrixActionTrigger = document.getElementById('purchase-matrix-action-trigger');
-    var creditTierLabel = document.getElementById('credit-tier-label');
-    var creditBalanceDisplay = document.getElementById('credit-balance-display');
-    var promptInputField = document.getElementById('prompt-input-field');
-    var generateActionBtn = document.getElementById('generate-action-btn');
-    var progressContainerBar = document.getElementById('progress-container-bar');
-    var progressStatusMessage = document.getElementById('progress-status-message');
-    var progressPercentageMetric = document.getElementById('progress-percentage-metric');
-    var progressFillIndicator = document.getElementById('progress-fill-indicator');
-    var fileSystemList = document.getElementById('file-system-list');
-    var activeFileTitleIndicator = document.getElementById('active-file-title-indicator');
-    var codeCanvasOutput = document.getElementById('code-canvas-output');
-    var liveRenderSandbox = document.getElementById('live-render-sandbox');
-    var sandboxRefreshTrigger = document.getElementById('sandbox-refresh-trigger');
-
-    if (currentUserId) {
-        welcomeScreen.classList.add('hidden');
-        appLayout.classList.remove('hidden');
-        closeSettingsModalBtn.classList.remove('hidden');
-        identityHandleInput.value = currentUserId;
-        byokSecretInput.value = currentApiKey;
-        synchronizeAccountResourceLimits();
-        renderWorkspaceStructureState();
-    }
-
-    getStartedBtn.onclick = function(e) {
-        console.log('Get Started clicked');
-        e.preventDefault();
-        settingsModal.classList.remove('hidden');
-    };
-
-    settingsTriggerBtn.onclick = function() { settingsModal.classList.remove('hidden'); };
-    closeSettingsModalBtn.onclick = function() { if (currentUserId) settingsModal.classList.add('hidden'); };
-    upgradeTriggerBtn.onclick = function() { upgradeModal.classList.remove('hidden'); };
-    closeUpgradeModalBtn.onclick = function() { upgradeModal.classList.add('hidden'); };
-    purchaseMatrixActionTrigger.onclick = function() { alert("Pro Matrix provision routing triggered."); upgradeModal.classList.add('hidden'); };
-    sandboxRefreshTrigger.onclick = function() { compileSandboxIframeExecutionEnvironment(); };
-
-    saveConfigurationAction.onclick = function() {
-        var checkedHandle = identityHandleInput.value.trim();
-        if (!checkedHandle) { alert("Account parameters require a valid handle vector."); return; }
-        currentUserId = checkedHandle;
-        currentApiKey = byokSecretInput.value.trim();
-        localStorage.setItem('forge_user_id', checkedHandle);
-        localStorage.setItem('forge_byok_key', currentApiKey);
-        settingsModal.classList.add('hidden');
-        welcomeScreen.classList.add('hidden');
-        appLayout.classList.remove('hidden');
-        closeSettingsModalBtn.classList.remove('hidden');
-        synchronizeAccountResourceLimits();
-        renderWorkspaceStructureState();
-    };
-
-    function synchronizeAccountResourceLimits() {
-        if (!currentUserId) return;
-        fetch('/api/check-credits', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: currentUserId, action: 'check' })
-        }).then(function(res) { return res.json(); })
-       .then(function(data) {
-            creditTierLabel.innerText = data.tier || 'FREE';
-            creditBalanceDisplay.innerText = data.credits!== undefined? data.credits : '400';
-        }).catch(function() {
+if (currentUserId) {
+welcomeScreen.classList.add('hidden');
+appLayout.classList.remove('hidden');
+closeSettingsModalBtn.classList.remove('hidden');
+identityHandleInput.value = currentUserId;
+byokSecretInput.value = currentApiKey;
+synchronizeAccountResourceLimits();
+renderWorkspaceStructureState();
+}
+getStartedBtn.onclick = function(e) {
+console.log('Get Started clicked');
+e.preventDefault();
+settingsModal.classList.remove('hidden');
+};
+settingsTriggerBtn.onclick = function() { settingsModal.classList.remove('hidden'); };
+closeSettingsModalBtn.onclick = function() { if (currentUserId) settingsModal.classList.add('hidden'); };
+upgradeTriggerBtn.onclick = function() { upgradeModal.classList.remove('hidden'); };
+closeUpgradeModalBtn.onclick = function() { upgradeModal.classList.add('hidden'); };
+closeShareModalBtn.onclick = function() { shareModal.classList.add('hidden'); };
+purchaseMatrixActionTrigger.onclick = function() { alert("Pro Matrix provision routing triggered."); upgradeModal.classList.add('hidden'); };
+sandboxRefreshTrigger.onclick = function() { compileSandboxIframeExecutionEnvironment(); };
+copyShareLinkBtn.onclick = function() {
+navigator.clipboard.writeText(shareLinkInput.value);
+copyShareLinkBtn.innerText = 'Copied!';
+setTimeout(function() { copyShareLinkBtn.innerText = 'Copy'; }, 2000);
+};
+saveConfigurationAction.onclick = function() {
+var checkedHandle = identityHandleInput.value.trim();
+if (!checkedHandle) { alert("Account parameters require a valid handle vector."); return; }
+currentUserId = checkedHandle;
+currentApiKey = byokSecretInput.value.trim();
+localStorage.setItem('forge_user_id', checkedHandle);
+localStorage.setItem('forge_byok_key', currentApiKey);
+settingsModal.classList.add('hidden');
+welcomeScreen.classList.add('hidden');
+appLayout.classList.remove('hidden');
+closeSettingsModalBtn.classList.remove('hidden');
+synchronizeAccountResourceLimits();
+renderWorkspaceStructureState();
+};
+function synchronizeAccountResourceLimits() {
+if (!currentUserId) return;
+fetch('/api/check-credits', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ userId: currentUserId, action: 'check' })
+}).then(function(res) { return res.json(); })
+.then(function(data) {
+creditTierLabel.innerText = data.tier || 'FREE';
+creditBalanceDisplay.innerText = data.credits!== undefined? data.credits : '400';
+}).catch(function() {
 creditTierLabel.innerText = 'FREE';
 creditBalanceDisplay.innerText = '400';
 });
@@ -305,6 +274,7 @@ progressContainerBar.classList.remove('hidden');
 generateActionBtn.disabled = true;
 generateActionBtn.classList.add('opacity-50');
 codeCanvasOutput.innerText = '';
+shareProjectBtn.classList.add('hidden');
 updateProgressMonitorTracker(10, "Checking credits...");
 fetch('/api/generate', {
 method: 'POST',
@@ -343,6 +313,17 @@ currentProject.files.content = data.code;
 updateProgressMonitorTracker(100, "Done");
 compileSandboxIframeExecutionEnvironment();
 synchronizeAccountResourceLimits();
+if (data.projectId) {
+const shareUrl = `${window.location.origin}/api/project/${data.projectId}`;
+shareProjectBtn.classList.remove('hidden');
+shareProjectBtn.onclick = function() {
+shareLinkInput.value = shareUrl;
+const previewUrl = `https://image.thum.io/get/width/600/crop/800/${encodeURIComponent(shareUrl)}`;
+sharePreviewImg.src = previewUrl;
+sharePreviewImg.classList.remove('hidden');
+shareModal.classList.remove('hidden');
+};
+}
 setTimeout(function() { progressContainerBar.classList.add('hidden'); }, 800);
 }
 } catch(e) {}
@@ -352,7 +333,9 @@ return read();
 });
 }
 return read();
-}).catch(function() {}).finally(function() {
+}).catch(function(err) {
+console.error(err);
+}).finally(function() {
 generateActionBtn.disabled = false;
 generateActionBtn.classList.remove('opacity-50');
 promptInputField.value = '';

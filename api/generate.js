@@ -11,10 +11,11 @@ export default async function handler(req) {
   }
 
   try {
-    const { prompt, email, action, filePath, fileDescription, existingFiles, byok } = await req.json();
-    if (!email) return Response.json({ error: 'Email required' }, { status: 400 });
+    const { prompt, userId, action, filePath, fileDescription, existingFiles, byok } = await req.json();
+    if (!userId) return Response.json({ error: 'User ID required' }, { status: 400 });
     
-    let aiClient, model = 'gpt-4o-mini';
+    let aiClient;
+    let model = 'gpt-4o-mini';
     
     if (byok?.key && byok?.provider) {
       if (byok.provider === 'groq') {
@@ -51,7 +52,7 @@ export default async function handler(req) {
       const creditRes = await fetch(`${proto}://${host}/api/check-credits`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, action: 'deduct', buildCost: estimatedCost })
+        body: JSON.stringify({ userId, action: 'deduct', buildCost: estimatedCost })
       });
       const creditCheck = await creditRes.json();
       
@@ -103,15 +104,11 @@ export default async function handler(req) {
       const encoder = new TextEncoder();
       const readable = new ReadableStream({
         async start(controller) {
-          let code = '';
           try {
             for await (const chunk of stream) {
               const text = chunk.choices[0]?.delta?.content || '';
-              code += text;
               controller.enqueue(encoder.encode(text));
             }
-            // Final cleanup - strip any markdown fences
-            const cleanCode = code.replace(/```[\w]*\n/g, '').replace(/```$/g, '').trim();
             controller.close();
           } catch (e) {
             controller.error(e);
@@ -130,4 +127,4 @@ export default async function handler(req) {
     console.error('AI Error:', err);
     return Response.json({ error: 'Generation failed: ' + err.message }, { status: 500 });
   }
-        }
+}

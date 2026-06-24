@@ -1,5 +1,4 @@
 import { Redis } from '@upstash/redis';
-import OpenAI from 'openai';
 
 export const config = { runtime: 'edge' };
 
@@ -11,120 +10,107 @@ export default async function handler(req) {
   }
 
   try {
-    const { prompt, userId, action, filePath, fileDescription, existingFiles, byok } = await req.json();
-    if (!userId) return Response.json({ error: 'User ID required' }, { status: 400 });
-    
-    let aiClient;
-    let model = 'gpt-4o-mini';
-    
-    if (byok?.key && byok?.provider) {
-      if (byok.provider === 'groq') {
-        aiClient = new OpenAI({ apiKey: byok.key, baseURL: 'https://api.groq.com/openai/v1' });
-        model = 'llama-3.1-70b-versatile'; // 750 tokens/s
-      } else if (byok.provider === 'openai') {
-        aiClient = new OpenAI({ apiKey: byok.key });
-        model = 'gpt-4o-mini';
-      } else if (byok.provider === 'openrouter') {
-        aiClient = new OpenAI({ apiKey: byok.key, baseURL: 'https://openrouter.ai/api/v1' });
-        model = 'openai/gpt-4o-mini';
-      }
-    } else {
-      // Default to Groq for speed - 10x faster than OpenAI
-      if (process.env.GROQ_KEY) {
-        aiClient = new OpenAI({ apiKey: process.env.GROQ_KEY, baseURL: 'https://api.groq.com/openai/v1' });
-        model = 'llama-3.1-70b-versatile';
-      } else if (process.env.OPENROUTER_KEY) {
-        aiClient = new OpenAI({ apiKey: process.env.OPENROUTER_KEY, baseURL: 'https://openrouter.ai/api/v1' });
-        model = 'openai/gpt-4o-mini';
-      } else if (process.env.OPENAI_KEY) {
-        aiClient = new OpenAI({ apiKey: process.env.OPENAI_KEY });
-        model = 'gpt-4o-mini';
-      } else {
-        return Response.json({ error: 'No AI API key found' }, { status: 500 });
-      }
+    const { userId, prompt, apiKey } = await req.json();
+
+    if (!userId ||!prompt) {
+      return Response.json({ error: 'Missing userId or prompt' }, { status: 400 });
     }
-    
-    if (!byok?.key && action === 'plan') {
-      const estimatedCost = Math.max(20, Math.min(60, Math.ceil(prompt.length / 20)));
-      const host = req.headers.get('host');
-      const proto = req.headers.get('x-forwarded-proto') || 'https';
-      
-      const creditRes = await fetch(`${proto}://${host}/api/check-credits`, {
+
+    const safeUserKey = String(userId).trim().replace(/[^a-zA-Z0-9_\-+:]/g, '');
+    const hasValidByok = apiKey && String(apiKey).trim().startsWith('gsk_');
+    const operationCost = 20;
+
+    if (!hasValidByok) {
+      const checkRes = await fetch(new URL('/api/check-credits', req.url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action: 'deduct', buildCost: estimatedCost })
+        body: JSON.stringify({ userId: safeUserKey, action: 'deduct', buildCost: operationCost })
       });
-      const creditCheck = await creditRes.json();
-      
-      if (!creditCheck.success) {
+
+      if (!checkRes.ok) {
+        const errData = await checkRes.json();
         return Response.json({
-          error: 'INSUFFICIENT_CREDITS',
-          message: `This project needs ~${estimatedCost} credits. You have ${creditCheck.credits}.`,
-          tier: creditCheck.tier, credits: creditCheck.credits, upgrade: true
+          success: false,
+          error: errData.message || 'Insufficient credits',
+          upgrade: errData.upgrade
         }, { status: 402 });
       }
     }
-    
-    if (action === 'plan') {
-      const completion = await aiClient.chat.completions.create({
-        model: model,
-        messages: [{
-          role: 'system',
-          content: 'Return ONLY JSON: {projectName: string, files: [{path: string, description: string}]}. Max 5 files. For web: index.html, style.css, script.js. For React: index.html, App.jsx, index.css.'
-        }, {
-          role: 'user',
-          content: `App: ${prompt}`
-        }],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-        max_tokens: 500
-      });
-      
-      const plan = JSON.parse(completion.choices[0].message.content);
-      return Response.json({ success: true,...plan });
+
+    const groqKey = hasValidByok? apiKey : process.env.GROQ_API_KEY;
+
+    if (!groqKey) {
+      return Response.json({ error: 'No Groq API key configured' }, { status: 500 });
     }
-    
-    if (action === 'file') {
-      // Stream the response for instant UI updates
-      const stream = await aiClient.chat.completions.create({
-        model: model,
+
+    const systemPrompt = `You are Forge, an expert web dev. Generate a complete single-file HTML app using Tailwind CSS via CDN and Font Awesome icons. Return ONLY the full HTML code, no markdown, no explanations. User prompt: ${prompt}`;
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${groqKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-70b-versatile',
+        messages: [{ role: 'user', content: systemPrompt }],
         stream: true,
-        messages: [{
-          role: 'system',
-          content: `Write ONLY code for ${filePath}. No markdown, no explanations. Description: ${fileDescription}. Existing: ${existingFiles?.join(', ') || 'none'}. Production-ready. Use Tailwind CDN if needed.`
-        }, {
-          role: 'user',
-          content: `Project: ${prompt}\nFile: ${filePath}`
-        }],
-        temperature: 0.1,
-        max_tokens: 3000
-      });
+        temperature: 0.2
+      })
+    });
 
-      // Convert OpenAI stream to web stream
-      const encoder = new TextEncoder();
-      const readable = new ReadableStream({
-        async start(controller) {
-          try {
-            for await (const chunk of stream) {
-              const text = chunk.choices[0]?.delta?.content || '';
-              controller.enqueue(encoder.encode(text));
-            }
-            controller.close();
-          } catch (e) {
-            controller.error(e);
-          }
-        }
-      });
-
-      return new Response(readable, {
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-      });
+    if (!groqRes.ok) {
+      const err = await groqRes.text();
+      throw new Error(`Groq error: ${err}`);
     }
-    
-    return Response.json({ error: 'Invalid action' }, { status: 400 });
-    
-  } catch (err) {
-    console.error('AI Error:', err);
-    return Response.json({ error: 'Generation failed: ' + err.message }, { status: 500 });
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = groqRes.body.getReader();
+        const decoder = new TextDecoder();
+        let fullCode = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
+
+            for (const line of lines) {
+              const data = line.replace('data: ', '').trim();
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const token = parsed.choices[0]?.delta?.content || '';
+                if (token) {
+                  fullCode += token;
+                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ token })}\n\n`));
+                }
+              } catch {}
+            }
+          }
+
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true, code: fullCode })}\n\n`));
+          controller.close();
+        } catch (e) {
+          controller.error(e);
+        }
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+
+  } catch (error) {
+    console.error('Generate error:', error);
+    return Response.json({ error: 'Generation failed: ' + error.message }, { status: 500 });
   }
 }

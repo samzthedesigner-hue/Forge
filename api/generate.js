@@ -1,7 +1,5 @@
 import { Redis } from '@upstash/redis';
-import { customAlphabet } from 'nanoid';
 
-const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 10);
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -14,6 +12,10 @@ const PLAN_LIMITS = {
 };
 
 export const config = { runtime: 'edge' };
+
+function generateId() {
+  return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+}
 
 export default async function handler(req) {
   if (req.method!== 'POST') {
@@ -35,10 +37,12 @@ export default async function handler(req) {
       await redis.set(`tier:${userId}`, 'FREE');
     }
 
+    credits = parseInt(credits);
+
     if (credits < 1 &&!apiKey) {
       return new Response(JSON.stringify({ 
         error: 'Out of credits. Add BYOK key or upgrade.',
-        creditsLeft: parseInt(credits),
+        creditsLeft: credits,
         tier 
       }), { status: 402 });
     }
@@ -72,13 +76,13 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ error: 'Groq API failed' }), { status: 500 });
     }
 
-    const projectId = nanoid();
+    const projectId = generateId();
     let fullCode = '';
     let tokenCount = 0;
 
     const stream = new ReadableStream({
       async start(controller) {
-        controller.enqueue(`data: ${JSON.stringify({ type: 'credits', creditsLeft: parseInt(credits), tier })}\n\n`);
+        controller.enqueue(`data: ${JSON.stringify({ type: 'credits', creditsLeft: credits, tier })}\n\n`);
         
         const reader = groqRes.body.getReader();
         const decoder = new TextDecoder();
@@ -99,7 +103,7 @@ export default async function handler(req) {
                   done: true, 
                   code: fullCode, 
                   projectId,
-                  creditsLeft: parseInt(credits),
+                  creditsLeft: credits,
                   tier 
                 })}\n\n`);
                 controller.close();
@@ -112,7 +116,7 @@ export default async function handler(req) {
                   fullCode += token;
                   tokenCount++;
                   if (tokenCount % 10 === 0) {
-                    controller.enqueue(`data: ${JSON.stringify({ token, creditsLeft: parseInt(credits), tier })}\n\n`);
+                    controller.enqueue(`data: ${JSON.stringify({ token, creditsLeft: credits, tier })}\n\n`);
                   } else {
                     controller.enqueue(`data: ${JSON.stringify({ token })}\n\n`);
                   }

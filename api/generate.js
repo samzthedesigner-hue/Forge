@@ -7,6 +7,12 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
+const PLAN_LIMITS = {
+  FREE: 400,
+  PRO: 10000,
+  MAX: 100000
+};
+
 export const config = { runtime: 'edge' };
 
 export default async function handler(req) {
@@ -20,15 +26,26 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ error: 'Missing userId or prompt' }), { status: 400 });
     }
 
-    // Check credits
     let credits = await redis.get(`credits:${userId}`);
-    if (credits === null) credits = 400;
-    if (credits < 1 &&!apiKey) {
-      return new Response(JSON.stringify({ error: 'Out of credits. Add BYOK key or upgrade.' }), { status: 402 });
+    let tier = await redis.get(`tier:${userId}`) || 'FREE';
+    
+    if (credits === null) {
+      credits = PLAN_LIMITS.FREE;
+      await redis.set(`credits:${userId}`, PLAN_LIMITS.FREE);
+      await redis.set(`tier:${userId}`, 'FREE');
     }
 
-    // Deduct credit if no BYOK
-    if (!apiKey) await redis.decr(`credits:${userId}`);
+    if (credits < 1 &&!apiKey) {
+      return new Response(JSON.stringify({ 
+        error: 'Out of credits. Add BYOK key or upgrade.',
+        creditsLeft: parseInt(credits),
+        tier 
+      }), { status: 402 });
+    }
+
+    if (!apiKey) {
+      credits = await redis.decr(`credits:${userId}`);
+    }
 
     const systemPrompt = `You are Forge, an expert web developer. Generate a complete, single-file HTML app with Tailwind CSS via CDN. No external JS files. Use inline <script>. Make it production-ready and beautiful. Output ONLY HTML code, no explanations.`;
 
@@ -51,14 +68,18 @@ export default async function handler(req) {
     });
 
     if (!groqRes.ok) {
+      if (!apiKey) await redis.incr(`credits:${userId}`);
       return new Response(JSON.stringify({ error: 'Groq API failed' }), { status: 500 });
     }
 
     const projectId = nanoid();
     let fullCode = '';
+    let tokenCount = 0;
 
     const stream = new ReadableStream({
       async start(controller) {
+        controller.enqueue(`data: ${JSON.stringify({ type: 'credits', creditsLeft: parseInt(credits), tier })}\n\n`);
+        
         const reader = groqRes.body.getReader();
         const decoder = new TextDecoder();
         
@@ -73,8 +94,14 @@ export default async function handler(req) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') {
-                await redis.set(`project:${projectId}`, fullCode, { ex: 2592000 }); // 30 days
-                controller.enqueue(`data: ${JSON.stringify({ done: true, code: fullCode, projectId })}\n\n`);
+                await redis.set(`project:${projectId}`, fullCode, { ex: 2592000 });
+                controller.enqueue(`data: ${JSON.stringify({ 
+                  done: true, 
+                  code: fullCode, 
+                  projectId,
+                  creditsLeft: parseInt(credits),
+                  tier 
+                })}\n\n`);
                 controller.close();
                 return;
               }
@@ -83,7 +110,12 @@ export default async function handler(req) {
                 const token = parsed.choices[0]?.delta?.content || '';
                 if (token) {
                   fullCode += token;
-                  controller.enqueue(`data: ${JSON.stringify({ token })}\n\n`);
+                  tokenCount++;
+                  if (tokenCount % 10 === 0) {
+                    controller.enqueue(`data: ${JSON.stringify({ token, creditsLeft: parseInt(credits), tier })}\n\n`);
+                  } else {
+                    controller.enqueue(`data: ${JSON.stringify({ token })}\n\n`);
+                  }
                 }
               } catch (e) {}
             }

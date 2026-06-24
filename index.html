@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,36 +8,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #f3f4f6; }
        .code-font { font-family: 'JetBrains Mono', monospace; }
        .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-       .welcome-bg { background: radial-gradient(circle at top middle, rgba(59, 130, 246, 0.15) 0%, rgba(11, 15, 25) 70%); }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col relative">
 
-    <div id="welcome-screen" class="absolute inset-0 z-50 welcome-bg flex flex-col items-center justify-center p-4">
-        <div class="max-w-2xl text-center space-y-8 px-4">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-500 text-4xl mb-2 shadow-lg shadow-blue-500/10">
-                <i class="fas fa-cubes-stacked"></i>
-            </div>
-            <div class="space-y-4">
-                <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500">
-                    Build Web Apps <span class="text-blue-500">With AI</span>
-                </h1>
-                <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto font-light leading-relaxed">
-                    Generate, preview, and deploy full-stack applications instantly with parallel processing and Groq streaming.
-                </p>
-            </div>
-            <div>
-                <button id="get-started-btn" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-3 mx-auto text-lg cursor-pointer">
-                    <span>Get Started for Free</span>
-                    <i class="fas fa-arrow-right text-sm"></i>
-                </button>
-            </div>
+    <!-- Welcome Screen - Matches Image 3 Exactly -->
+    <div id="welcome-screen" class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
+        <div class="text-center space-y-6">
+            <h1 class="text-4xl font-bold text-white">Welcome to Forge</h1>
+            <p class="text-gray-400 text-lg">Build apps with AI. Set your username to start.</p>
+            <button id="get-started-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all cursor-pointer">
+                Get Started
+            </button>
         </div>
     </div>
 
+    <!-- Main App Layout -->
     <div id="app-layout" class="flex-1 flex flex-col h-full hidden">
         <header class="h-16 border-b border-gray-800 bg-gray-950/50 backdrop-blur px-6 flex items-center justify-between z-10">
             <div class="flex items-center space-x-3">
@@ -101,7 +90,7 @@
                             <i class="fas fa-code text-blue-400"></i>
                             <span id="active-file-title-indicator">index.html</span>
                         </div>
-                        <span class="text-[11px] code-font text-gray-600">READ-ONLY COMPILED VIEW</span>
+                        <span class="text-xs code-font text-gray-600">READ-ONLY COMPILED VIEW</span>
                     </div>
                     <div class="flex-1 overflow-auto p-4 bg-gray-950/50 code-font text-sm leading-relaxed text-blue-100 whitespace-pre-wrap selection:bg-blue-500/20" id="code-canvas-output"></div>
                 </div>
@@ -121,6 +110,7 @@
         </main>
     </div>
 
+    <!-- Settings Modal -->
     <div id="settings-configuration-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
         <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl transform transition-all border border-gray-800">
             <div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
@@ -137,26 +127,26 @@
                         <span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-user-gear"></i></span>
                         <input id="identity-handle-input" type="text" placeholder="e.g., +2348012345678 or DevSam" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white transition-all text-sm">
                     </div>
-                    <p class="text-[11px] text-gray-500 leading-normal">Your unique project isolation identification variable tracking active persistent storage spaces.</p>
                 </div>
                 <div class="h-px bg-gray-800/60 my-2"></div>
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Bring Your Own Key (BYOK)</label>
-                        <span class="px-2 py-0.5 text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded font-medium">OPTIONAL</span>
+                        <span class="px-2 py-0.5 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded font-medium">OPTIONAL</span>
                     </div>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-key"></i></span>
                         <input id="byok-secret-input" type="password" placeholder="gsk_..." class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white font-mono text-xs transition-all tracking-wider">
                     </div>
-                    <p class="text-[11px] text-gray-500 leading-normal">Bypass default server credits limitations cleanly by providing an external valid secure Groq API license vector key directly.</p>
                 </div>
+            </div>
             <div class="px-6 py-4 bg-gray-950 border-t border-gray-800 flex justify-end">
                 <button id="save-configuration-action" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 font-semibold text-white rounded-xl text-sm transition-all shadow-md shadow-blue-600/10 cursor-pointer">Save Environment Parameters</button>
             </div>
         </div>
     </div>
 
+    <!-- Upgrade Modal -->
     <div id="upgrade-tier-system-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
         <div class="glass-panel w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl transform transition-all border border-gray-800">
             <div class="px-6 py-4 border-b border-gray-800 bg-gray-950 flex items-center justify-between">
@@ -202,41 +192,41 @@
 window.addEventListener('load', function() {
     console.log('Forge loaded');
 
-    let currentUserId = localStorage.getItem('forge_user_id') || '';
-    let currentApiKey = localStorage.getItem('forge_byok_key') || '';
-    let currentProject = {
+    var currentUserId = localStorage.getItem('forge_user_id') || '';
+    var currentApiKey = localStorage.getItem('forge_byok_key') || '';
+    var currentProject = {
         files: {
             name: "index.html",
-            content: `<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex items-center justify-center text-white p-4"><div class="text-center space-y-4 bg-black/30 p-8 rounded-2xl backdrop-blur-md border border-white/10 max-w-md"><h1 class="text-3xl font-extrabold tracking-tight">Active Engine Ready</h1><p class="text-indigo-200 text-sm">Forge has successfully synchronized operational memory pipelines.</p></div></body></html>`
+            content: '<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex items-center justify-center text-white p-4"><div class="text-center space-y-4 bg-black/30 p-8 rounded-2xl backdrop-blur-md border border-white/10 max-w-md"><h1 class="text-3xl font-extrabold tracking-tight">Active Engine Ready</h1><p class="text-indigo-200 text-sm">Forge has successfully synchronized operational memory pipelines.</p></div></body></html>'
         }
     };
 
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const getStartedBtn = document.getElementById('get-started-btn');
-    const appLayout = document.getElementById('app-layout');
-    const settingsModal = document.getElementById('settings-configuration-modal');
-    const settingsTriggerBtn = document.getElementById('settings-trigger-btn');
-    const closeSettingsModalBtn = document.getElementById('close-settings-modal-btn');
-    const identityHandleInput = document.getElementById('identity-handle-input');
-    const byokSecretInput = document.getElementById('byok-secret-input');
-    const saveConfigurationAction = document.getElementById('save-configuration-action');
-    const upgradeModal = document.getElementById('upgrade-tier-system-modal');
-    const upgradeTriggerBtn = document.getElementById('upgrade-trigger-btn');
-    const closeUpgradeModalBtn = document.getElementById('close-upgrade-modal-btn');
-    const purchaseMatrixActionTrigger = document.getElementById('purchase-matrix-action-trigger');
-    const creditTierLabel = document.getElementById('credit-tier-label');
-    const creditBalanceDisplay = document.getElementById('credit-balance-display');
-    const promptInputField = document.getElementById('prompt-input-field');
-    const generateActionBtn = document.getElementById('generate-action-btn');
-    const progressContainerBar = document.getElementById('progress-container-bar');
-    const progressStatusMessage = document.getElementById('progress-status-message');
-    const progressPercentageMetric = document.getElementById('progress-percentage-metric');
-    const progressFillIndicator = document.getElementById('progress-fill-indicator');
-    const fileSystemList = document.getElementById('file-system-list');
-    const activeFileTitleIndicator = document.getElementById('active-file-title-indicator');
-    const codeCanvasOutput = document.getElementById('code-canvas-output');
-    const liveRenderSandbox = document.getElementById('live-render-sandbox');
-    const sandboxRefreshTrigger = document.getElementById('sandbox-refresh-trigger');
+    var welcomeScreen = document.getElementById('welcome-screen');
+    var getStartedBtn = document.getElementById('get-started-btn');
+    var appLayout = document.getElementById('app-layout');
+    var settingsModal = document.getElementById('settings-configuration-modal');
+    var settingsTriggerBtn = document.getElementById('settings-trigger-btn');
+    var closeSettingsModalBtn = document.getElementById('close-settings-modal-btn');
+    var identityHandleInput = document.getElementById('identity-handle-input');
+    var byokSecretInput = document.getElementById('byok-secret-input');
+    var saveConfigurationAction = document.getElementById('save-configuration-action');
+    var upgradeModal = document.getElementById('upgrade-tier-system-modal');
+    var upgradeTriggerBtn = document.getElementById('upgrade-trigger-btn');
+    var closeUpgradeModalBtn = document.getElementById('close-upgrade-modal-btn');
+    var purchaseMatrixActionTrigger = document.getElementById('purchase-matrix-action-trigger');
+    var creditTierLabel = document.getElementById('credit-tier-label');
+    var creditBalanceDisplay = document.getElementById('credit-balance-display');
+    var promptInputField = document.getElementById('prompt-input-field');
+    var generateActionBtn = document.getElementById('generate-action-btn');
+    var progressContainerBar = document.getElementById('progress-container-bar');
+    var progressStatusMessage = document.getElementById('progress-status-message');
+    var progressPercentageMetric = document.getElementById('progress-percentage-metric');
+    var progressFillIndicator = document.getElementById('progress-fill-indicator');
+    var fileSystemList = document.getElementById('file-system-list');
+    var activeFileTitleIndicator = document.getElementById('active-file-title-indicator');
+    var codeCanvasOutput = document.getElementById('code-canvas-output');
+    var liveRenderSandbox = document.getElementById('live-render-sandbox');
+    var sandboxRefreshTrigger = document.getElementById('sandbox-refresh-trigger');
 
     if (currentUserId) {
         welcomeScreen.classList.add('hidden');
@@ -258,4 +248,122 @@ window.addEventListener('load', function() {
     closeSettingsModalBtn.onclick = function() { if (currentUserId) settingsModal.classList.add('hidden'); };
     upgradeTriggerBtn.onclick = function() { upgradeModal.classList.remove('hidden'); };
     closeUpgradeModalBtn.onclick = function() { upgradeModal.classList.add('hidden'); };
-    purchaseMatrixActionTrigger.onclick = function() { alert("Pro Matrix provision routing triggered."); upgradeMod
+    purchaseMatrixActionTrigger.onclick = function() { alert("Pro Matrix provision routing triggered."); upgradeModal.classList.add('hidden'); };
+    sandboxRefreshTrigger.onclick = function() { compileSandboxIframeExecutionEnvironment(); };
+
+    saveConfigurationAction.onclick = function() {
+        var checkedHandle = identityHandleInput.value.trim();
+        if (!checkedHandle) { alert("Account parameters require a valid handle vector."); return; }
+        currentUserId = checkedHandle;
+        currentApiKey = byokSecretInput.value.trim();
+        localStorage.setItem('forge_user_id', checkedHandle);
+        localStorage.setItem('forge_byok_key', currentApiKey);
+        settingsModal.classList.add('hidden');
+        welcomeScreen.classList.add('hidden');
+        appLayout.classList.remove('hidden');
+        closeSettingsModalBtn.classList.remove('hidden');
+        synchronizeAccountResourceLimits();
+        renderWorkspaceStructureState();
+    };
+
+    function synchronizeAccountResourceLimits() {
+        if (!currentUserId) return;
+        fetch('/api/check-credits', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUserId, action: 'check' })
+        }).then(function(res) { return res.json(); })
+       .then(function(data) {
+            creditTierLabel.innerText = data.tier || 'FREE';
+            creditBalanceDisplay.innerText = data.credits!== undefined? data.credits : '400';
+        }).catch(function() {
+creditTierLabel.innerText = 'FREE';
+creditBalanceDisplay.innerText = '400';
+});
+}
+function renderWorkspaceStructureState() {
+fileSystemList.innerHTML = '';
+var fileEntryItemRow = document.createElement('button');
+fileEntryItemRow.className = "w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg bg-blue-600/10 border border-blue-500/20 text-white text-xs text-left font-medium";
+fileEntryItemRow.innerHTML = '<i class="fas fa-file-code text-blue-400"></i> <span class="truncate">' + currentProject.files.name + '</span>';
+fileEntryItemRow.onclick = displaySelectedActiveFileAsset;
+fileSystemList.appendChild(fileEntryItemRow);
+displaySelectedActiveFileAsset();
+}
+function displaySelectedActiveFileAsset() {
+activeFileTitleIndicator.innerText = currentProject.files.name;
+codeCanvasOutput.innerText = currentProject.files.content;
+compileSandboxIframeExecutionEnvironment();
+}
+function compileSandboxIframeExecutionEnvironment() {
+try { liveRenderSandbox.srcdoc = currentProject.files.content; } catch(e) {}
+}
+generateActionBtn.onclick = function() {
+var structuredPrompt = promptInputField.value.trim();
+if (!structuredPrompt) return;
+progressContainerBar.classList.remove('hidden');
+generateActionBtn.disabled = true;
+generateActionBtn.classList.add('opacity-50');
+codeCanvasOutput.innerText = '';
+updateProgressMonitorTracker(10, "Checking credits...");
+fetch('/api/generate', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ userId: currentUserId, prompt: structuredPrompt, apiKey: currentApiKey })
+}).then(function(res) {
+if (!res.ok) {
+return res.json().then(function(err) {
+alert(err.error || 'Generation failed');
+progressContainerBar.classList.add('hidden');
+generateActionBtn.disabled = false;
+generateActionBtn.classList.remove('opacity-50');
+throw new Error('Failed');
+});
+}
+updateProgressMonitorTracker(30, "Streaming from Groq...");
+var reader = res.body.getReader();
+var decoder = new TextDecoder();
+var fullCode = '';
+function read() {
+return reader.read().then(function(result) {
+if (result.done) return;
+var chunk = decoder.decode(result.value);
+var lines = chunk.split('\n\n');
+for (var i = 0; i < lines.length; i++) {
+var line = lines[i];
+if (line.indexOf('data: ') === 0) {
+try {
+var data = JSON.parse(line.slice(6));
+if (data.token) {
+fullCode += data.token;
+codeCanvasOutput.innerText = fullCode;
+}
+if (data.done) {
+currentProject.files.content = data.code;
+updateProgressMonitorTracker(100, "Done");
+compileSandboxIframeExecutionEnvironment();
+synchronizeAccountResourceLimits();
+setTimeout(function() { progressContainerBar.classList.add('hidden'); }, 800);
+}
+} catch(e) {}
+}
+}
+return read();
+});
+}
+return read();
+}).catch(function() {}).finally(function() {
+generateActionBtn.disabled = false;
+generateActionBtn.classList.remove('opacity-50');
+promptInputField.value = '';
+});
+};
+function updateProgressMonitorTracker(percentage, visualText) {
+progressFillIndicator.style.width = percentage + "%";
+progressPercentageMetric.innerText = percentage + "%";
+progressStatusMessage.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> ' + visualText;
+}
+});
+</script>
+</body>
+</html>

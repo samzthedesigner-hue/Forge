@@ -1,69 +1,54 @@
-// Elements from your existing setup
-const sendBtn = document.getElementById('sendBtn') || document.getElementById('buildBtn');
+const sendBtn = document.getElementById('sendBtn');
 const promptInput = document.getElementById('promptInput');
-const output = document.getElementById('output') || document.getElementById('codeEditor');
+const output = document.getElementById('output');
 const buildBar = document.getElementById('buildBar');
-const buildToggle = document.getElementById('buildToggle');
-const buildStatusText = document.getElementById('buildStatusText') || document.getElementById('buildStatus');
+const buildStatusText = document.getElementById('buildStatusText');
 const fileList = document.getElementById('fileList');
 const welcomeScreen = document.getElementById('welcomeScreen');
-const exampleChips = document.querySelectorAll('.example-chip');
 const previewFrame = document.getElementById('previewFrame');
+const settingsBtn = document.getElementById('settingsBtn');
+const welcomeBtn = document.getElementById('welcomeBtn');
+const saveEmailBtn = document.getElementById('saveEmailBtn');
+const saveBYOKBtn = document.getElementById('saveBYOKBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const continueFreeBtn = document.getElementById('continueFreeBtn');
+const upgradeSettingsBtn = document.getElementById('upgradeSettingsBtn');
 
-// State
 let userEmail = localStorage.getItem('forge_email');
 let byokProvider = localStorage.getItem('forge_byok_provider') || '';
 let byokKey = localStorage.getItem('forge_byok_key') || '';
 let currentProject = { files: {}, activeFile: null };
 let buildInProgress = false;
+let abortController = null;
 
-// Auto-resize textarea
-if (promptInput) {
-  promptInput.addEventListener('input', () => {
-    promptInput.style.height = 'auto';
-    promptInput.style.height = promptInput.scrollHeight + 'px';
-  });
-}
-
-// Example chips
-exampleChips?.forEach(chip => {
-  chip.addEventListener('click', () => {
-    promptInput.value = chip.dataset.prompt || chip.innerText;
-    promptInput.dispatchEvent(new Event('input'));
-  });
+promptInput.addEventListener('input', () => {
+  promptInput.style.height = 'auto';
+  promptInput.style.height = promptInput.scrollHeight + 'px';
 });
 
-// Init
-if (!userEmail) {
-  setTimeout(() => openSettings(), 500);
-} else {
+if (userEmail) {
+  welcomeScreen.style.display = 'none';
   updateCreditUI();
 }
-if (welcomeScreen && userEmail) welcomeScreen.style.display = 'none';
 
-// Credits
 async function updateCreditUI() {
-  if (!userEmail) return;
+  const creditEl = document.getElementById('creditDisplay');
+  if (!userEmail) return creditEl.innerText = 'No email set';
   try {
     const res = await fetch('/api/check-credits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: userEmail, action: 'check' })
-    }).then(r => r.json());
-    
-    const creditEl = document.getElementById('creditDisplay');
-    if (creditEl) {
-      const tierColor = res.tier === 'PROMAX'? '#7c3aed' : res.tier === 'PRO'? '#4f46e5' : '#666';
-      const creditsText = byokKey? 'BYOK Active' : res.tier === 'PROMAX'? 'Unlimited' : `${res.credits} credits`;
-      creditEl.innerHTML = `<span style="color:${tierColor};font-weight:bold">${res.tier}</span> • ${creditsText}${res.inGrace? ' • <span style="color:#f59e0b">Grace</span>' : ''}`;
-    }
+    });
+    const data = await res.json();
+    const tierColor = data.tier === 'PROMAX'? '#7c3aed' : data.tier === 'PRO'? '#4f46e5' : '#666';
+    const creditsText = byokKey? 'BYOK' : data.tier === 'PROMAX'? 'Unlimited' : `${data.credits}`;
+    creditEl.innerHTML = `<span style="color:${tierColor};font-weight:bold">${data.tier}</span> • ${creditsText}${data.inGrace? ' • Grace' : ''}`;
   } catch (err) {
-    const creditEl = document.getElementById('creditDisplay');
-    if (creditEl) creditEl.innerText = 'Error';
+    creditEl.innerText = 'Error';
   }
 }
 
-// Start multi-file build
 async function startBuild() {
   if (buildInProgress) return;
   if (!userEmail) return openSettings();
@@ -72,119 +57,132 @@ async function startBuild() {
   if (!prompt) return alert('Enter a prompt first');
 
   buildInProgress = true;
-  if (sendBtn) {
-    sendBtn.disabled = true;
-    sendBtn.innerText = 'Planning...';
-  }
-  if (welcomeScreen) welcomeScreen.style.display = 'none';
+  abortController = new AbortController();
+  sendBtn.disabled = true;
+  sendBtn.innerText = 'Starting...';
+  welcomeScreen.style.display = 'none';
   
-  document.getElementById('buildPlan').innerHTML = 'Analyzing your request...';
-  if (buildBar) buildBar.style.width = '0%';
-  if (buildStatusText) buildStatusText.innerText = 'Planning project structure...';
-  if (fileList) fileList.innerHTML = '<div style="color:#666;text-align:center;padding:20px;font-size:12px">Generating files...</div>';
+  const planBox = document.getElementById('buildPlan');
+  planBox.innerHTML = 'Planning...';
+  buildBar.style.width = '5%';
+  buildStatusText.innerText = 'Starting...';
+  fileList.innerHTML = '<div class="text-gray-600 text-center py-4">Planning...</div>';
   currentProject = { files: {}, activeFile: null };
   
   try {
-    // Step 1: Get plan
+    sendBtn.innerText = 'Planning...';
+    
     const planRes = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        prompt, 
-        email: userEmail, 
-        action: 'plan',
+        prompt, email: userEmail, action: 'plan',
         byok: byokKey? { provider: byokProvider, key: byokKey } : null
-      })
+      }),
+      signal: abortController.signal
     });
     
-    const planData = await planRes.json();
-    
-    if (planRes.status === 402 &&!byokKey) {
-      document.getElementById('upgradeMessage').innerText = planData.message;
-      document.getElementById('upgradeModal').style.display = 'flex';
-      throw new Error('Insufficient credits');
+    if (!planRes.ok) {
+      const errData = await planRes.json();
+      if (planRes.status === 402) {
+        document.getElementById('upgradeMessage').innerText = errData.message;
+        document.getElementById('upgradeModal').style.display = 'flex';
+      }
+      throw new Error(errData.error || `API ${planRes.status}`);
     }
     
-    if (!planData.files ||!planData.files.length) throw new Error('No plan generated');
+    const planData = await planRes.json();
+    if (!planData.files?.length) throw new Error('No plan generated');
     
-    // Show plan
-    document.getElementById('buildPlan').innerHTML = `
-      <div><b>Project:</b> ${planData.projectName || 'Untitled'}</div>
-      <div><b>Files:</b> ${planData.files.length}</div>
-      <div style="margin-top:8px"><b>Structure:</b></div>
-      ${planData.files.map(f => `<div style="margin-left:10px;font-size:11px">• ${f.path}</div>`).join('')}
-    `;
+    planBox.innerHTML = `<div><b>Project:</b> ${planData.projectName || 'Untitled'}</div><div><b>Files:</b> ${planData.files.length}</div>`;
     
-    // Init file list
-    if (fileList) fileList.innerHTML = '';
+    fileList.innerHTML = '';
     planData.files.forEach(f => {
       currentProject.files[f.path] = { path: f.path, content: '', status: 'pending', description: f.description };
       addFileToList(f.path, 'pending');
     });
     
-    // Step 2: Generate files one by one
-    if (sendBtn) sendBtn.innerText = 'Building...';
-    let completed = 0;
+    sendBtn.innerText = `Building ${planData.files.length} files...`;
+    buildStatusText.innerText = `Generating ${planData.files.length} files...`;
+    buildBar.style.width = '20%';
     
-    for (const file of planData.files) {
+    let completed = 0;
+    const startTime = Date.now();
+    
+    // Parallel streaming generation
+    const filePromises = planData.files.map(async (file) => {
       updateFileStatus(file.path, 'building');
-      if (buildStatusText) buildStatusText.innerText = `Building ${file.path}...`;
       
       const fileRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          prompt, 
-          email: userEmail, 
-          action: 'file',
-          filePath: file.path,
-          fileDescription: file.description,
-          existingFiles: Object.keys(currentProject.files).filter(p => currentProject.files[p].content),
+          prompt, email: userEmail, action: 'file',
+          filePath: file.path, fileDescription: file.description,
+          existingFiles: planData.files.map(f => f.path),
           byok: byokKey? { provider: byokProvider, key: byokKey } : null
-        })
-      }).then(r => r.json());
+        }),
+        signal: abortController.signal
+      });
       
-      if (fileRes.code) {
-        currentProject.files[file.path].content = fileRes.code;
-        currentProject.files[file.path].status = 'done';
-        updateFileStatus(file.path, 'done');
-        if (!currentProject.activeFile) selectFile(file.path);
-      } else {
-        updateFileStatus(file.path, 'error');
+      if (!fileRes.ok) throw new Error(`${file.path} failed`);
+      
+      // Stream the code
+      const reader = fileRes.body.getReader();
+      const decoder = new TextDecoder();
+      let code = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        code += decoder.decode(value);
+        currentProject.files[file.path].content = code;
+        if (currentProject.activeFile === file.path) output.innerText = code;
+        updatePreview();
       }
       
+      // Clean markdown fences
+      code = code.replace(/```[\w]*\n/g, '').replace(/```$/g, '').trim();
+      currentProject.files[file.path].content = code;
+      currentProject.files[file.path].status = 'done';
+      updateFileStatus(file.path, 'done');
+      if (!currentProject.activeFile) selectFile(file.path);
+      
       completed++;
-      if (buildBar) buildBar.style.width = `${(completed/planData.files.length)*100}%`;
-      updatePreview();
-    }
+      buildBar.style.width = `${20 + (completed/planData.files.length)*80}%`;
+      buildStatusText.innerText = `Generated ${completed}/${planData.files.length}`;
+    });
     
-    if (buildStatusText) buildStatusText.innerText = `Done. ${completed} files generated.`;
+    await Promise.all(filePromises);
+    
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    buildBar.style.width = '100%';
+    buildStatusText.innerText = `Done in ${elapsed}s`;
+    updatePreview();
     if (!byokKey) updateCreditUI();
     
   } catch (err) {
-    if (buildStatusText) buildStatusText.innerText = `Error: ${err.message}`;
+    if (err.name === 'AbortError') {
+      buildStatusText.innerText = 'Cancelled';
+    } else {
+      buildStatusText.innerText = `Error`;
+      planBox.innerHTML = `<span style="color:#ef4444">Error: ${err.message}</span>`;
+    }
+    console.error(err);
   } finally {
     buildInProgress = false;
-    if (sendBtn) {
-      sendBtn.disabled = false;
-      sendBtn.innerText = 'Generate Project';
-    }
+    abortController = null;
+    sendBtn.disabled = false;
+    sendBtn.innerText = 'Generate Project';
   }
 }
 
-// File UI
 function addFileToList(path, status) {
-  if (!fileList) return;
-  if (fileList.querySelector('[data-empty]')) fileList.innerHTML = '';
-  
   const div = document.createElement('div');
   div.className = 'file-item';
   div.dataset.path = path;
   div.onclick = () => selectFile(path);
-  div.innerHTML = `
-    <span>${path}</span>
-    <span class="file-status status-${status}">${status}</span>
-  `;
+  div.innerHTML = `<span>${path}</span><span class="file-status status-${status}">${status}</span>`;
   fileList.appendChild(div);
 }
 
@@ -192,10 +190,8 @@ function updateFileStatus(path, status) {
   const item = document.querySelector(`.file-item[data-path="${path}"]`);
   if (item) {
     const statusEl = item.querySelector('.file-status');
-    if (statusEl) {
-      statusEl.className = `file-status status-${status}`;
-      statusEl.innerText = status;
-    }
+    statusEl.className = `file-status status-${status}`;
+    statusEl.innerText = status;
   }
 }
 
@@ -203,50 +199,40 @@ function selectFile(path) {
   currentProject.activeFile = path;
   document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
   document.querySelector(`.file-item[data-path="${path}"]`)?.classList.add('active');
-  if (output) output.innerText = currentProject.files?.content || '// Empty file';
+  output.innerText = currentProject.files?.content || '// Empty file';
 }
 
-// Preview
 function updatePreview() {
-  if (!previewFrame) return;
   const htmlFile = currentProject.files['index.html'] || currentProject.files['app.jsx'] || currentProject.files['App.js'];
-  
   if (!htmlFile?.content) return;
   
   let html = htmlFile.content;
   
-  // If React, wrap it
   if (htmlFile.path.includes('.jsx') || htmlFile.path.includes('App.js')) {
     const cssFile = currentProject.files['index.css'] || currentProject.files['styles.css'] || currentProject.files['App.css'];
-    html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>${cssFile?.content || ''}</style>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
-    ${Object.values(currentProject.files).filter(f => f.path.endsWith('.js') || f.path.endsWith('.jsx')).map(f => f.content).join('\n')}
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>`;
+    const jsFiles = Object.values(currentProject.files).filter(f => f.path.endsWith('.js') || f.path.endsWith('.jsx')).map(f => f.content).join('\n');
+    html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/@babel/standalone/babel.min.js"></script><script src="https://cdn.tailwindcss.com"></script><style>${cssFile?.content || ''}</style></head><body><div id="root"></div><script type="text/babel">${jsFiles}const root = ReactDOM.createRoot(document.getElementById('root'));root.render(<App />);</script></body></html>`;
+  } else if (!html.includes('<!DOCTYPE')) {
+    const cssFile = currentProject.files['style.css'] || currentProject.files['styles.css'];
+    const jsFile = currentProject.files['script.js'];
+    html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"></script><style>${cssFile?.content || ''}</style></head><body>${html}<script>${jsFile?.content || ''}</script></body></html>`;
   }
   
   previewFrame.srcdoc = html;
 }
 
-// Bind button
-if (sendBtn) sendBtn.onclick = startBuild;
+sendBtn.onclick = startBuild;
+settingsBtn.onclick = openSettings;
+welcomeBtn.onclick = openSettings;
+saveEmailBtn.onclick = saveEmail;
+saveBYOKBtn.onclick = saveBYOK;
+closeSettingsBtn.onclick = closeSettings;
+continueFreeBtn.onclick = continueOnFree;
+upgradeSettingsBtn.onclick = () => {
+  closeUpgradeModal();
+  openSettings();
+};
 
-// Settings
 function openSettings() {
   document.getElementById('settingsModal').style.display = 'flex';
   document.getElementById('userEmail').value = userEmail || '';
@@ -261,7 +247,7 @@ function saveEmail() {
   userEmail = email;
   updateCreditUI();
   closeSettings();
-  if (welcomeScreen) welcomeScreen.style.display = 'none';
+  welcomeScreen.style.display = 'none';
 }
 function saveBYOK() {
   const provider = document.getElementById('byokProvider').value;
@@ -276,10 +262,10 @@ function saveBYOK() {
   closeSettings();
 }
 
-// Modals
 function closeUpgradeModal() { document.getElementById('upgradeModal').style.display = 'none'; }
 function continueOnFree() {
   closeUpgradeModal();
   document.getElementById('buildPlan').innerHTML = 'Build cancelled. Add your API key in Settings for unlimited builds.';
+  if (abortController) abortController.abort();
 }
 window.onclick = e => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; }

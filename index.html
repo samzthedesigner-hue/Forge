@@ -27,20 +27,22 @@ body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
 <div class="text-blue-500 text-xl"><i class="fas fa-cubes-stacked"></i></div>
 <span class="font-bold text-lg tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">FORGE</span>
 <span class="px-2 py-0.5 text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md font-medium">v1.1</span>
+<div id="project-name-header" class="hidden ml-4 pl-4 border-l border-gray-800 text-gray-300 text-sm font-medium"></div>
 </div>
 <div class="flex items-center space-x-4">
-<div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-1.5 flex items-center space-x-3 text-sm">
+<div id="credit-display" class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-1.5 flex items-center space-x-3 text-sm">
 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
 <span id="credit-tier-label" class="text-xs font-semibold uppercase tracking-wider text-gray-400">FREE</span>
 <div class="h-4 w-px bg-gray-800"></div>
 <span class="text-gray-300 font-medium"><span id="credit-balance-display">0</span> Credits</span>
 <button id="upgrade-trigger-btn" class="text-xs text-blue-400 hover:text-blue-300 font-medium ml-1">Upgrade</button>
 </div>
-<button id="share-project-btn" class="hidden px-3 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl text-xs"><i class="fas fa-share"></i> Share</button>
+<button id="back-to-editor-btn" class="hidden px-3 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl text-xs"><i class="fas fa-code mr-2"></i>Editor</button>
+<button id="share-project-btn" class="hidden px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-medium"><i class="fas fa-share mr-2"></i>Share</button>
 <button id="settings-trigger-btn" class="p-2.5 bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl"><i class="fas fa-gear text-lg"></i></button>
 </div></header>
 
-<section class="border-b border-gray-800 bg-gray-900/40 p-4 px-6 flex flex-col md:flex-row items-center gap-4">
+<section id="prompt-section" class="border-b border-gray-800 bg-gray-900/40 p-4 px-6 flex flex-col md:flex-row items-center gap-4">
 <div class="w-full md:flex-1 relative">
 <div class="absolute inset-y-0 left-4 flex items-center text-gray-500"><i class="fas fa-wand-magic-sparkles"></i></div>
 <input id="prompt-input-field" type="text" placeholder="Describe the application you want to forge today..." class="w-full pl-12 pr-4 py-3 bg-gray-950 border border-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl text-white placeholder-gray-500 outline-none">
@@ -57,8 +59,8 @@ body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
 <div id="progress-fill-indicator" class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300" style="width:0%"></div>
 </div></div>
 
-<main class="flex-1 flex overflow-hidden">
-<aside class="w-64 border-r border-gray-800 bg-gray-950/30 flex flex-col">
+<main id="main-workspace" class="flex-1 flex overflow-hidden">
+<aside id="file-sidebar" class="w-64 border-r border-gray-800 bg-gray-950/30 flex flex-col">
 <div class="p-4 border-b border-gray-800 flex items-center justify-between">
 <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Workspace Files</span>
 <i class="fas fa-folder-tree text-gray-500 text-xs"></i>
@@ -67,19 +69,19 @@ body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
 <div class="text-xs text-gray-500 text-center py-8 italic">No project files compiled yet.</div>
 </div></aside>
 <section class="flex-1 flex flex-col md:flex-row overflow-hidden">
-<div class="flex-1 border-r border-gray-800 flex flex-col bg-gray-950/10">
+<div id="code-editor-panel" class="flex-1 border-r border-gray-800 flex flex-col bg-gray-950/10">
 <div class="h-11 border-b border-gray-800 bg-gray-950/60 px-4 flex items-center justify-between">
 <div class="flex items-center space-x-2 text-xs font-medium text-gray-400"><i class="fas fa-code text-blue-400"></i><span id="active-file-title-indicator">index.html</span></div>
 <span class="text-xs code-font text-gray-600">READ-ONLY COMPILED VIEW</span>
 </div>
 <div class="flex-1 overflow-auto p-4 bg-gray-950/50 code-font text-sm leading-relaxed text-blue-100 whitespace-pre-wrap selection:bg-blue-500/20" id="code-canvas-output"></div>
 </div>
-<div class="flex-1 flex flex-col bg-white">
+<div id="sandbox-panel" class="flex-1 flex flex-col bg-white">
 <div class="h-11 border-b border-gray-200 bg-gray-100 px-4 flex items-center justify-between text-gray-800">
 <div class="flex items-center space-x-2 text-xs font-medium text-gray-600"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live App Sandbox View</span></div>
 <button id="sandbox-refresh-trigger" class="p-1 hover:bg-gray-200 rounded text-gray-500"><i class="fas fa-rotate-right text-xs"></i></button>
 </div>
-<iframe id="live-render-sandbox" class="flex-1 w-full h-full border-none bg-white" sandbox="allow-scripts allow-modals allow-popups"></iframe>
+<iframe id="live-render-sandbox" class="flex-1 w-full h-full border-none bg-white" sandbox="allow-scripts allow-modals allow-popups allow-forms"></iframe>
 </div></section></main></div>
 
 <div id="settings-configuration-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
@@ -90,7 +92,7 @@ body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
 </div>
 <div class="p-6 space-y-5 bg-gray-950/40">
 <div class="space-y-2">
-<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Account Identity Handle (Username or WhatsApp)</label>
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Account Identity Handle</label>
 <div class="relative"><span class="absolute inset-y-0 left-3.5 flex items-center text-gray-500"><i class="fas fa-user-gear"></i></span>
 <input id="identity-handle-input" type="text" placeholder="e.g., +2348012345678 or DevSam" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 focus:border-blue-500 rounded-xl outline-none text-white text-sm"></div>
 </div>
@@ -157,10 +159,9 @@ body{font-family:'Inter',sans-serif;background:#000;color:#f3f4f6}
 
 <script>
 window.addEventListener('load', function() {
-console.log('Forge loaded');
 var currentUserId = localStorage.getItem('forge_user_id') || '';
 var currentApiKey = localStorage.getItem('forge_byok_key') || '';
-var currentProject = {files:{name:"index.html",content:'<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex items-center justify-center text-white p-4"><div class="text-center space-y-4 bg-black/30 p-8 rounded-2xl backdrop-blur-md border border-white/10 max-w-md"><h1 class="text-3xl font-extrabold tracking-tight">Active Engine Ready</h1><p class="text-indigo-200 text-sm">Forge has successfully synchronized operational memory pipelines.</p></div></body></html>'}};
+var currentProject = {files:{name:"index.html",content:'<!DOCTYPE html><html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="bg-gray-950 min-h-screen flex items-center justify-center text-gray-400 p-4"><div class="text-center space-y-3"><svg class="w-12 h-12 mx-auto text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg><p class="text-sm">Your generated app will appear here</p><p class="text-xs text-gray-600">Type a prompt above and click Forge App</p></div></body></html>'}, projectName: '', projectId: ''};
 var welcomeScreen = document.getElementById('welcome-screen');
 var getStartedBtn = document.getElementById('get-started-btn');
 var appLayout = document.getElementById('app-layout');
@@ -193,6 +194,13 @@ var closeShareModalBtn = document.getElementById('close-share-modal-btn');
 var shareLinkInput = document.getElementById('share-link-input');
 var copyShareLinkBtn = document.getElementById('copy-share-link-btn');
 var sharePreviewImg = document.getElementById('share-preview-img');
+var projectNameHeader = document.getElementById('project-name-header');
+var backToEditorBtn = document.getElementById('back-to-editor-btn');
+var promptSection = document.getElementById('prompt-section');
+var fileSidebar = document.getElementById('file-sidebar');
+var codeEditorPanel = document.getElementById('code-editor-panel');
+var sandboxPanel = document.getElementById('sandbox-panel');
+var creditDisplay = document.getElementById('credit-display');
 
 if (currentUserId) {
 welcomeScreen.classList.add('hidden');
@@ -204,7 +212,6 @@ synchronizeAccountResourceLimits();
 renderWorkspaceStructureState();
 }
 getStartedBtn.onclick = function(e) {
-console.log('Get Started clicked');
 e.preventDefault();
 settingsModal.classList.remove('hidden');
 };
@@ -219,6 +226,9 @@ copyShareLinkBtn.onclick = function() {
 navigator.clipboard.writeText(shareLinkInput.value);
 copyShareLinkBtn.innerText = 'Copied!';
 setTimeout(function() { copyShareLinkBtn.innerText = 'Copy'; }, 2000);
+};
+backToEditorBtn.onclick = function() {
+switchToEditorMode();
 };
 saveConfigurationAction.onclick = function() {
 var checkedHandle = identityHandleInput.value.trim();
@@ -266,6 +276,24 @@ compileSandboxIframeExecutionEnvironment();
 function compileSandboxIframeExecutionEnvironment() {
 try { liveRenderSandbox.srcdoc = currentProject.files.content; } catch(e) {}
 }
+function switchToPreviewMode() {
+promptSection.classList.add('hidden');
+fileSidebar.classList.add('hidden');
+codeEditorPanel.classList.add('hidden');
+backToEditorBtn.classList.remove('hidden');
+shareProjectBtn.classList.remove('hidden');
+projectNameHeader.classList.remove('hidden');
+projectNameHeader.innerText = currentProject.projectName || 'Untitled App';
+sandboxPanel.classList.remove('md:flex-row');
+}
+function switchToEditorMode() {
+promptSection.classList.remove('hidden');
+fileSidebar.classList.remove('hidden');
+codeEditorPanel.classList.remove('hidden');
+backToEditorBtn.classList.add('hidden');
+shareProjectBtn.classList.add('hidden');
+projectNameHeader.classList.add('hidden');
+}
 generateActionBtn.onclick = function() {
 var structuredPrompt = promptInputField.value.trim();
 if (!structuredPrompt) return;
@@ -274,6 +302,7 @@ generateActionBtn.disabled = true;
 generateActionBtn.classList.add('opacity-50');
 codeCanvasOutput.innerText = '';
 shareProjectBtn.classList.add('hidden');
+currentProject.projectName = structuredPrompt.slice(0, 40);
 updateProgressMonitorTracker(10, "Checking credits...");
 fetch('/api/generate', {
 method: 'POST',
@@ -309,12 +338,16 @@ codeCanvasOutput.innerText = fullCode;
 }
 if (data.done) {
 currentProject.files.content = data.code;
+currentProject.projectId = data.projectId;
 updateProgressMonitorTracker(100, "Done");
 compileSandboxIframeExecutionEnvironment();
 synchronizeAccountResourceLimits();
+setTimeout(function() { 
+  progressContainerBar.classList.add('hidden');
+  switchToPreviewMode();
+}, 500);
 if (data.projectId) {
 const shareUrl = `${window.location.origin}/api/project/${data.projectId}`;
-shareProjectBtn.classList.remove('hidden');
 shareProjectBtn.onclick = function() {
   shareLinkInput.value = shareUrl;
   shareModal.classList.remove('hidden');
@@ -346,8 +379,8 @@ shareProjectBtn.onclick = function() {
         },
         () => {
           fetch(`https://api.microlink.io/?url=${encodeURIComponent(shareUrl)}&screenshot=true&meta=false`)
-          .then(r => r.json())
-          .then(data => {
+        .then(r => r.json())
+        .then(data => {
               if (data.status === 'success' && data.data?.screenshot?.url) {
                 sharePreviewImg.src = data.data.screenshot.url;
                 sharePreviewImg.classList.remove('hidden');
@@ -356,7 +389,7 @@ shareProjectBtn.onclick = function() {
                 sharePreviewImg.alt = 'Preview unavailable';
               }
             })
-          .catch(() => {
+        .catch(() => {
               sharePreviewImg.alt = 'Preview unavailable';
             });
         }
@@ -365,7 +398,6 @@ shareProjectBtn.onclick = function() {
   );
 };
 }
-setTimeout(function() { progressContainerBar.classList.add('hidden'); }, 800);
 }
 } catch(e) {}
 }

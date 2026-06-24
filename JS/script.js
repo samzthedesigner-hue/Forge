@@ -21,7 +21,7 @@ function saveUserEmail(email) {
   if (email) localStorage.setItem('forge_user_email', email);
 }
 
-// Your existing elements from script.js
+// Elements from your existing UI
 const sendBtn = document.getElementById('sendBtn');
 const promptInput = document.getElementById('promptInput') || document.getElementById('prompt');
 const output = document.getElementById('output');
@@ -31,8 +31,9 @@ const buildStatusText = document.getElementById('buildStatusText');
 const fileList = document.getElementById('fileList');
 const welcomeScreen = document.getElementById('welcomeScreen');
 const exampleChips = document.querySelectorAll('.chip');
+const freeCounter = document.getElementById('freeCounter');
 
-// Auto-resize textarea - keep your existing code
+// Auto-resize textarea
 if (promptInput) {
   promptInput.addEventListener('input', () => {
     promptInput.style.height = 'auto';
@@ -40,11 +41,8 @@ if (promptInput) {
   });
 }
 
-// Add free counter display if you have one in HTML
-const freeCounter = document.getElementById('freeCounter');
-
+// Check remaining credits/free uses
 async function checkFreeRemaining() {
-  if (!freeCounter) return;
   try {
     const res = await fetch('/api/generate', {
       method: 'OPTIONS',
@@ -56,13 +54,32 @@ async function checkFreeRemaining() {
       }
     });
     const remaining = res.headers.get('X-Free-Remaining');
-    if (remaining !== null) {
-      freeCounter.textContent = `Free: ${remaining} left`;
+    const credits = res.headers.get('X-Credits-Remaining');
+    
+    if (credits !== null) {
+      if (freeCounter) freeCounter.textContent = `Pro: ${credits} credits`;
+    } else if (remaining !== null) {
+      if (freeCounter) freeCounter.textContent = `Free: ${remaining} left`;
     }
   } catch (e) {}
 }
 
-// Main generate function - uses your sendBtn
+// Settings modal
+function openSettings() {
+  const modal = document.getElementById('settingsModal');
+  if (!modal) return;
+  
+  const keys = getKeys();
+  document.getElementById('groqKey').value = keys.groq;
+  document.getElementById('openaiKey').value = keys.openai;
+  document.getElementById('openrouterKey').value = keys.openrouter;
+  document.getElementById('userEmail').value = getUserEmail();
+  modal.style.display = 'flex';
+}
+
+window.openSettings = openSettings;
+
+// Main generate
 if (sendBtn) {
   sendBtn.onclick = async () => {
     const prompt = promptInput.value;
@@ -92,27 +109,39 @@ if (sendBtn) {
 
       const data = await res.json();
 
-      if (res.status === 429 && data.upsell) {
-        if (output) output.innerHTML = `<div style="color:#f44">Free limit reached. <a href="#" onclick="openSettings()" style="color:#4f46e5">Add your API key</a> or <a href="https://buy.stripe.com/test_00g00g" target="_blank" style="color:#4f46e5">Upgrade to Pro $5/mo</a> for unlimited.</div>`;
+      if (res.status === 429) {
+        if (data.upsell === 'promax') {
+          if (output) output.innerHTML = `<div style="color:#f44">Out of Pro credits. <a href="https://buy.stripe.com/REPLACE_PROMAX_LINK" target="_blank" style="color:#7c3aed">Upgrade to Pro Max</a> for unlimited.</div>`;
+        } else if (data.upsell === 'pro') {
+          if (output) output.innerHTML = `<div style="color:#f44">Free limit reached. <a href="#" onclick="openSettings()" style="color:#4f46e5">Add your API key</a> or <a href="https://buy.stripe.com/REPLACE_PRO_LINK" target="_blank" style="color:#4f46e5">Upgrade to Pro $5/mo</a>.</div>`;
+        }
         return;
       }
 
       if (!res.ok) throw new Error(data.error || 'Generation failed');
 
-      // Display plan
       if (output) output.innerHTML = `<b>Plan:</b><br>${data.plan}<br><br><b>Files:</b><br>`;
       
-      // Display files in your fileList
       if (fileList) {
         fileList.innerHTML = '';
         data.files.forEach(f => {
           const div = document.createElement('div');
-          div.innerHTML = `<b>${f.path}</b><pre>${f.content}</pre>`;
+          div.innerHTML = `<b>${f.path}</b><pre style="background:#0a0a0a;padding:10px;border-radius:4px;overflow-x:auto;margin:10px 0">${f.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
           fileList.appendChild(div);
         });
       }
 
       if (buildStatusText) buildStatusText.textContent = `Done via ${data.provider}`;
+      
+      // Update credits display
+      if (data.creditsLeft !== null && data.creditsLeft !== undefined) {
+        if (freeCounter) freeCounter.textContent = `Pro: ${data.creditsLeft} credits`;
+        if (data.creditsLeft < 20 && data.creditsLeft > 0) {
+          if (output) output.innerHTML += `<div style="color:#f44;margin-top:10px">⚠️ Low credits: ${data.creditsLeft} left. <a href="https://buy.stripe.com/REPLACE_PROMAX_LINK" target="_blank">Upgrade to Pro Max</a></div>`;
+        }
+      } else if (data.tier === 'PROMAX') {
+        if (freeCounter) freeCounter.textContent = `Pro Max: Unlimited`;
+      }
 
     } catch (err) {
       if (output) output.textContent = `Error: ${err.message}`;
@@ -122,19 +151,6 @@ if (sendBtn) {
       checkFreeRemaining();
     }
   };
-}
-
-// Settings modal - add this if you don't have it
-function openSettings() {
-  const modal = document.getElementById('settingsModal');
-  if (!modal) return alert('Add settings modal to HTML');
-  
-  const keys = getKeys();
-  document.getElementById('groqKey').value = keys.groq;
-  document.getElementById('openaiKey').value = keys.openai;
-  document.getElementById('openrouterKey').value = keys.openrouter;
-  document.getElementById('userEmail').value = getUserEmail();
-  modal.style.display = 'flex';
 }
 
 // Example chips
